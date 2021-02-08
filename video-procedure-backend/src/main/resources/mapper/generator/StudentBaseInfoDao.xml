@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.westwell.backend.modules.generator.dao.StudentBaseInfoDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.westwell.backend.modules.generator.entity.StudentBaseInfoEntity" id="studentBaseInfoMap">
+        <result property="id" column="id"/>
+        <result property="studentNum" column="student_num"/>
+        <result property="studentName" column="student_name"/>
+        <result property="picsUrl" column="pics_url"/>
+        <result property="videoUrl" column="video_url"/>
+        <result property="context" column="context"/>
+        <result property="creatTime" column="creat_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+
+</mapper>

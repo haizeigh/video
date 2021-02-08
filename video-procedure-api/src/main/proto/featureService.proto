@@ -1,0 +1,82 @@
+syntax = "proto3";
+option java_multiple_files = true;
+package com.westwell.api;
+
+message NullRequest {
+
+}
+
+message StudentPicUpdateRequest {
+    repeated string studentNums = 1;
+}
+
+message StudentPicUpdateResponse {
+    string success = 1;
+}
+
+message DetectPicsInRedisRequest {
+    repeated string picKeys = 1;
+}
+
+
+message DetectPicsInRedisResponse {
+    repeated string picKeys = 1;
+}
+
+message ContrastPicWithCollesRequest {
+    string picKey = 1; // 图片的key
+    repeated string picColles = 2;  // 图片集合的列表
+}
+
+message ContrastPicWithCollesResponse {
+    repeated ColleSimilarityResult sortedSimilarityResult = 1; // 图片和集合的相似度，从高到低排名
+}
+
+message ColleSimilarityResult{
+    string picColle = 1; // 图片集合的id
+    float similarity = 2; // 相似度结果
+}
+
+message ContrastCollesWithBaseInfoRequest {
+    repeated string picColles = 1; // 图片集合id的列表
+}
+
+message ContrastCollesWithBaseInfoResponse {
+    repeated ColleWithStudentResult colleWithStudentResults = 1; // 图片集合和学生学号
+}
+
+message ColleWithStudentResult{
+    string picColle = 1; // 图片集合的id
+    string studentNum = 2; // 学生学号
+}
+
+
+service FeatureService {
+    //通知一个学生信息修改
+    //    StudentPicUpdateRequest 学生id的列表
+    //    StudentPicUpdateRequest 处理结果
+    rpc studentPicUpdate(StudentPicUpdateRequest) returns (StudentPicUpdateResponse);
+
+    //通知一个学生信息修改
+    //    NullRequest 表示无参数
+    //    StudentPicUpdateResponse 处理结果
+    rpc studentsAllUpdate(NullRequest) returns (StudentPicUpdateResponse);
+
+    //检测帧图片转换成小图
+    //    DetectPicsInRedisRequest 待处理图片key的列表
+    //    DetectPicsInRedisResponse 已经处理图片key的列表
+    rpc detectPicsInRedis(DetectPicsInRedisRequest) returns (DetectPicsInRedisResponse);
+
+    //对比一张图片和redis中图片集合的相似都
+    //    ContrastPicWithCollesRequest 图片 以及 图片集合
+    //    ContrastPicWithCollesResponse 图片与图片集合的相似度
+    rpc contrastPicWithCollesInRedis(ContrastPicWithCollesRequest) returns (ContrastPicWithCollesResponse);
+
+    //对比图片集合属于哪一个学生
+    //    ContrastCollesWithBaseInfoRequest 图片集合列表
+    //    ContrastCollesWithBaseInfoResponse 学号与图片集合的列表
+    rpc contrastCollesWithBaseInfoInRedis(ContrastCollesWithBaseInfoRequest) returns (ContrastCollesWithBaseInfoResponse);
+}
+
+
+
