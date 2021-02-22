@@ -22,5 +22,5 @@ import java.util.Map;
 public interface ScheduleJobLogService extends IService<ScheduleJobLogEntity> {
 
 	PageUtils queryPage(Map<String, Object> params);
-	
+
 }

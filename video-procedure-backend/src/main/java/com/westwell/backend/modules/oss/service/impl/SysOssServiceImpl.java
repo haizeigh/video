@@ -31,5 +31,5 @@ public class SysOssServiceImpl extends ServiceImpl<SysOssDao, SysOssEntity> impl
 
 		return new PageUtils(page);
 	}
-	
+
 }

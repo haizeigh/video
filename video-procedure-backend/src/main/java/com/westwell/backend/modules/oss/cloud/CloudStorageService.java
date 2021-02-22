@@ -8,7 +8,7 @@
 
 package com.westwell.backend.modules.oss.cloud;
 
-import com.westwell.backend.common.utils.DateUtils;
+import com.westwell.api.common.utils.DateUtils;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.InputStream;

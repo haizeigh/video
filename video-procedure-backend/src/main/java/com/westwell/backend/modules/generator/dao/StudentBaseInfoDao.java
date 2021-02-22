@@ -6,12 +6,12 @@ import org.apache.ibatis.annotations.Mapper;
 
 /**
  * 学生基本信息
- * 
+ *
  * @author chenshun
  * @email sunlightcs@gmail.com
  * @date 2021-02-08 10:15:59
  */
 @Mapper
 public interface StudentBaseInfoDao extends BaseMapper<StudentBaseInfoEntity> {
-	
+
 }

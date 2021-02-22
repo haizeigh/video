@@ -23,6 +23,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * oauth2过滤器
@@ -43,9 +44,15 @@ public class OAuth2Filter extends AuthenticatingFilter {
         return new OAuth2Token(token);
     }
 
+    String[] goodPath = {"/generator/studentbaseinfo/save/path"};
+
     @Override
     protected boolean isAccessAllowed(ServletRequest request, ServletResponse response, Object mappedValue) {
         if(((HttpServletRequest) request).getMethod().equals(RequestMethod.OPTIONS.name())){
+            return true;
+        }
+//        System.out.println(((HttpServletRequest) request).getServletPath());
+        if (Arrays.stream(goodPath).allMatch( path -> ((HttpServletRequest) request).getServletPath().equals(path) )) {
             return true;
         }
 

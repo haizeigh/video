@@ -112,10 +112,10 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleDao, SysRoleEntity> i
 		if(role.getCreateUserId() == Constant.SUPER_ADMIN){
 			return ;
 		}
-		
+
 		//查询用户所拥有的菜单列表
 		List<Long> menuIdList = sysUserService.queryAllMenuId(role.getCreateUserId());
-		
+
 		//判断是否越权
 		if(!menuIdList.containsAll(role.getMenuIdList())){
 			throw new RRException("新增角色的权限，已超出你的权限范围");

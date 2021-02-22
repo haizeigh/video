@@ -7,47 +7,43 @@ message NullRequest {
 }
 
 message StudentPicUpdateRequest {
-    repeated string studentNums = 1;
+    repeated string student_nums = 1;
 }
 
 message StudentPicUpdateResponse {
     string success = 1;
 }
 
-message DetectPicsInRedisRequest {
-    repeated string picKeys = 1;
+message FacePicsInRedisRequest {
+    repeated string pic_keys = 1;
 }
 
-
-message DetectPicsInRedisResponse {
-    repeated string picKeys = 1;
+message ExtractFeatureInRedisResponse {
+    string success = 1;
 }
 
 message ContrastPicWithCollesRequest {
-    string picKey = 1; // 图片的key
-    repeated string picColles = 2;  // 图片集合的列表
+    string pic_key = 1; // 图片的key
+    repeated string pic_colles = 2;  // 图片集合的列表
 }
 
 message ContrastPicWithCollesResponse {
-    repeated ColleSimilarityResult sortedSimilarityResult = 1; // 图片和集合的相似度，从高到低排名
+    repeated double similarity_ordered_list = 1; // 相似度结果
+    repeated string pic_colles = 2; // 图片集合的id
 }
 
-message ColleSimilarityResult{
-    string picColle = 1; // 图片集合的id
-    float similarity = 2; // 相似度结果
-}
 
 message ContrastCollesWithBaseInfoRequest {
-    repeated string picColles = 1; // 图片集合id的列表
+    repeated string pic_colles = 1; // 图片集合id的列表
 }
 
 message ContrastCollesWithBaseInfoResponse {
-    repeated ColleWithStudentResult colleWithStudentResults = 1; // 图片集合和学生学号
+    repeated ColleWithStudentResult colle_with_student_results = 1; // 图片集合和学生学号
 }
 
 message ColleWithStudentResult{
-    string picColle = 1; // 图片集合的id
-    string studentNum = 2; // 学生学号
+    string pic_colle = 1; // 图片集合的id
+    string student_num = 2; // 学生学号
 }
 
 
@@ -62,10 +58,10 @@ service FeatureService {
     //    StudentPicUpdateResponse 处理结果
     rpc studentsAllUpdate(NullRequest) returns (StudentPicUpdateResponse);
 
-    //检测帧图片转换成小图
-    //    DetectPicsInRedisRequest 待处理图片key的列表
-    //    DetectPicsInRedisResponse 已经处理图片key的列表
-    rpc detectPicsInRedis(DetectPicsInRedisRequest) returns (DetectPicsInRedisResponse);
+    //提取图片的特征
+    //    PicsInRedisRequest 待处理图片key的列表
+    //    CallFeatureInRedisResponse 处理结果
+    rpc extractFeatureInRedis(FacePicsInRedisRequest) returns (ExtractFeatureInRedisResponse);
 
     //对比一张图片和redis中图片集合的相似都
     //    ContrastPicWithCollesRequest 图片 以及 图片集合

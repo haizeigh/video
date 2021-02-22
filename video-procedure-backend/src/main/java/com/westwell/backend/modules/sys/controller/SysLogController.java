@@ -32,7 +32,7 @@ import java.util.Map;
 public class SysLogController {
 	@Autowired
 	private SysLogService sysLogService;
-	
+
 	/**
 	 * 列表
 	 */
@@ -44,5 +44,5 @@ public class SysLogController {
 
 		return R.ok().put("page", page);
 	}
-	
+
 }

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.westwell.backend.modules.generator.dao.WcCameraInfoDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.westwell.backend.modules.generator.entity.WcCameraInfoEntity" id="wcCameraInfoMap">
+        <result property="id" column="id"/>
+        <result property="cameraNo" column="camera_no"/>
+        <result property="streamNo" column="stream_no"/>
+        <result property="nvrIp" column="nvr_ip"/>
+        <result property="nvrPort" column="nvr_port"/>
+        <result property="userName" column="user_name"/>
+        <result property="passwd" column="passwd"/>
+    </resultMap>
+
+
+</mapper>

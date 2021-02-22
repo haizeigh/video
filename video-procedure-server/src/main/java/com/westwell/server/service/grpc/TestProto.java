@@ -1,4 +1,4 @@
-package com.westwell.server.service;
+package com.westwell.server.service.grpc;
 
 import com.westwell.api.FeatureServiceGrpc;
 import com.westwell.api.StudentPicUpdateRequest;

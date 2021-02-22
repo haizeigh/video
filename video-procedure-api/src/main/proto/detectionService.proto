@@ -1,0 +1,25 @@
+syntax = "proto3";
+option java_multiple_files = true;
+package com.westwell.api;
+
+
+message PicsInRedisRequest {
+    repeated string pickeys_req = 1;
+}
+
+
+message DetectPicsInRedisResponse {
+    repeated string pickeys_res = 1;
+}
+
+
+service DetectionService {
+
+    //检测帧图片转换成小图
+    //    PicsInRedisRequest 待处理图片key的列表
+    //    DetectPicsInRedisResponse 已经处理图片key的列表
+    rpc detectPicsInRedis(PicsInRedisRequest) returns (DetectPicsInRedisResponse);
+}
+
+
+

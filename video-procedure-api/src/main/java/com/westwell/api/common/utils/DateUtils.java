@@ -6,7 +6,7 @@
  * 版权所有，侵权必究！
  */
 
-package com.westwell.backend.common.utils;
+package com.westwell.api.common.utils;
 
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
@@ -27,6 +27,9 @@ public class DateUtils {
 	public final static String DATE_PATTERN = "yyyy-MM-dd";
 	/** 时间格式(yyyy-MM-dd HH:mm:ss) */
 	public final static String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
+
+	public final static String DATE_DAY = "yyyyMMdd";
+	public final static String DATE_TIME = "HHmmss";
 
     /**
      * 日期格式化 日期格式为：yyyy-MM-dd
@@ -62,6 +65,16 @@ public class DateUtils {
         }
 
         DateTimeFormatter fmt = DateTimeFormat.forPattern(pattern);
+        return fmt.parseLocalDateTime(strDate).toDate();
+    }
+
+
+    public static Date stringToDate(String strDate) {
+        if (StringUtils.isBlank(strDate)){
+            return null;
+        }
+
+        DateTimeFormatter fmt = DateTimeFormat.forPattern(DATE_TIME_PATTERN);
         return fmt.parseLocalDateTime(strDate).toDate();
     }
 

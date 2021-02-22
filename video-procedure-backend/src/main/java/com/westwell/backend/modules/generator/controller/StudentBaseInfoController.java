@@ -1,20 +1,17 @@
 package com.westwell.backend.modules.generator.controller;
 
-import java.util.Arrays;
-import java.util.Map;
-
-import org.apache.shiro.authz.annotation.RequiresPermissions;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.westwell.backend.modules.generator.entity.StudentBaseInfoEntity;
-import com.westwell.backend.modules.generator.service.StudentBaseInfoService;
+import com.google.common.base.Strings;
 import com.westwell.backend.common.utils.PageUtils;
 import com.westwell.backend.common.utils.R;
+import com.westwell.backend.modules.generator.entity.StudentBaseInfoEntity;
+import com.westwell.backend.modules.generator.service.StudentBaseInfoService;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Arrays;
+import java.util.Map;
 
 
 /**
@@ -24,6 +21,7 @@ import com.westwell.backend.common.utils.R;
  * @email sunlightcs@gmail.com
  * @date 2021-02-08 10:15:59
  */
+@Slf4j
 @RestController
 @RequestMapping("generator/studentbaseinfo")
 public class StudentBaseInfoController {
@@ -59,8 +57,13 @@ public class StudentBaseInfoController {
     @RequestMapping("/save")
     @RequiresPermissions("generator:studentbaseinfo:save")
     public R save(@RequestBody StudentBaseInfoEntity studentBaseInfo){
-		studentBaseInfoService.save(studentBaseInfo);
+        try {
+            studentBaseInfoService.saveInfo(studentBaseInfo);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return R.error("新增图片错误");
 
+        }
         return R.ok();
     }
 
@@ -70,8 +73,12 @@ public class StudentBaseInfoController {
     @RequestMapping("/update")
     @RequiresPermissions("generator:studentbaseinfo:update")
     public R update(@RequestBody StudentBaseInfoEntity studentBaseInfo){
-		studentBaseInfoService.updateById(studentBaseInfo);
-
+        try {
+            studentBaseInfoService.updateInfoById(studentBaseInfo);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return R.error("更新图片错误");
+        }
         return R.ok();
     }
 
@@ -81,7 +88,26 @@ public class StudentBaseInfoController {
     @RequestMapping("/delete")
     @RequiresPermissions("generator:studentbaseinfo:delete")
     public R delete(@RequestBody Integer[] ids){
-		studentBaseInfoService.removeByIds(Arrays.asList(ids));
+		studentBaseInfoService.removeInfoByIds(Arrays.asList(ids));
+//        boolean result = studentBaseInfoService.deletePicByIds(ids);
+//        if (!result){
+//            return R.error("删除图片错误");
+//        }
+        return R.ok();
+    }
+
+    @RequestMapping("/save/path")
+    public R saveByPath(@RequestParam String path){
+
+        if (Strings.isNullOrEmpty(path)){
+            return R.error("path is null");
+        }
+        try {
+            studentBaseInfoService.saveByPath(path);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return R.error(e.getMessage());
+        }
 
         return R.ok();
     }

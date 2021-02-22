@@ -96,4 +96,13 @@ public class RedisUtils {
     private <T> T fromJson(String json, Class<T> clazz){
         return gson.fromJson(json, clazz);
     }
+
+    public void putHash(String key, String field, String value){
+        hashOperations.put(key, field, value);
+    }
+
+    public void hDelete(String key, String field){
+        hashOperations.delete(key, field);
+    }
+
 }

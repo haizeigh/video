@@ -2,9 +2,12 @@ package com.westwell.server;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 @SpringBootApplication
-//@ComponentScan(basePackages = {"com.learn.api", "com.learn.englishserver", "com.alibaba.dubbo"})
+@EnableAsync
+@ComponentScan(basePackages = {"com.westwell.server", "com.westwell.api"})
 //@ImportResource({"classpath:provider.xml"})
 //@ComponentScan(basePackages = {"com.handu.open.dubbo.monitor"})
 //@Import({ DubboConfig.class})
