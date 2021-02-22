@@ -68,6 +68,9 @@ public class VideoMediaServiceImpl implements VideoMediaService {
         commands.add("-i");
         commands.add(builder.toString());
 
+        commands.add("-s");
+        commands.add(DataConfig.PIXELS);
+
         commands.add("-t");
         long diffSec = (task.getTaskEntity().getVideoEndTime().getTime() - task.getTaskEntity().getVideoStartTime().getTime() ) / 1000 ;
         commands.add( diffSec+"");

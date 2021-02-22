@@ -5,6 +5,7 @@ import com.westwell.api.common.utils.DateUtils;
 import com.westwell.server.common.configs.DataConfig;
 import com.westwell.server.common.enums.TaskStatusEnum;
 import com.westwell.server.common.exception.VPException;
+import com.westwell.server.common.utils.RedisUtils;
 import com.westwell.server.dto.TaskDetailInfoDto;
 import com.westwell.server.entity.WcTaskEntity;
 import com.westwell.server.service.*;
@@ -47,9 +48,12 @@ public class WcTaskController {
     @Resource
     ResultDumpService resultDumpService;
 
+    @Resource
+    RedisUtils redisUtils;
 
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
+
 
     /**
      * 列表
@@ -58,7 +62,6 @@ public class WcTaskController {
     public WcTaskEntity list(@RequestParam Map<String, Object> params) {
 
         WcTaskEntity wcTaskEntity = wcTaskService.queryOne();
-
         //清理redis
         Set<String> keys = redisTemplate.keys("*");
         videoMediaService.clearPicsInRedis(new ArrayList<>(keys));
@@ -75,7 +78,10 @@ public class WcTaskController {
                     + "/" + DateUtils.format(new Date(), DateUtils.DATE_PATTERN)
                     + "/" + task.getTaskEntity().getCameraNo()
                     + "/" + DateUtils.format(task.getTaskEntity().getVideoStartTime(), DateUtils.DATE_TIME) ;
-            videoMediaService.cutVideoToPics(task, picPath);
+            boolean cutVideoToPics = videoMediaService.cutVideoToPics(task, picPath);
+            if (!cutVideoToPics){
+                throw new VPException("ffmpeg 截图出错");
+            }
 
 //           todo FFMPEG_PATH配置
             List<String> picKeyList = videoMediaService.writePicsToRedis(task, picPath);
