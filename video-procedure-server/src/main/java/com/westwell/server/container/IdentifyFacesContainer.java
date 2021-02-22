@@ -1,102 +1,121 @@
 package com.westwell.server.container;
 
 import com.westwell.server.common.configs.DataConfig;
+import com.westwell.server.common.utils.RedisUtils;
 import com.westwell.server.dto.TaskDetailInfoDto;
 import com.westwell.server.event.FaceCollectionChangeEvent;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
+@Data
 public class IdentifyFacesContainer {
 
-    public static Map<String, String> IDENTIFY_MAP = new ConcurrentHashMap<>( DataConfig.CLUSTER_NUM * 2 );
-    public static Map<String, List<String>> FACE_COLLECTION_MAP = new ConcurrentHashMap(DataConfig.CLUSTER_NUM * 2 );
-    public static AtomicInteger CLUSTER_COUNT = new AtomicInteger(0);
+    private   Map<String, String> identifyMap = new ConcurrentHashMap<>( DataConfig.CLUSTER_NUM * 2 );
+    private  List<String> faceCollection= new CopyOnWriteArrayList<>();
+    private  AtomicInteger clusterCount = new AtomicInteger(0);
+    //    全部的帧
+    private  List<String> allFrame = new LinkedList<>();
 
-    private static ApplicationContext applicationContext;
+    @Resource
+    private  ApplicationContext applicationContext;
 
-//    全部的帧
-    private static List<String> ALL_FRAME = new LinkedList<>();
+    @Resource
+    private RedisUtils redisUtils;
 
-
-
+/*
     public IdentifyFacesContainer(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
     }
 
-    public static void addPicToExistBucket(String faceKey, String faceColleKey){
+*/
 
-        new FaceCollectionChangeEvent("change", faceColleKey);
-        FACE_COLLECTION_MAP.get(faceColleKey).add(faceKey);
-
+    public void init(){
+        identifyMap = new ConcurrentHashMap<>( DataConfig.CLUSTER_NUM * 2 );
+        faceCollection= new CopyOnWriteArrayList<>();
+        clusterCount = new AtomicInteger(0);
+        allFrame = new LinkedList<>();
     }
 
-    public static boolean addPicToNewBucket(String faceKey, TaskDetailInfoDto task) {
 
-        if (CLUSTER_COUNT.get() > DataConfig.CLUSTER_NUM) {
-            log.warn("CLUSTER_COUNT={} 超出限制{}", CLUSTER_COUNT, DataConfig.CLUSTER_NUM);
+    public  void addPicToExistBucket(String faceKey, String faceColleKey){
+
+        redisUtils.lPush(faceColleKey, faceKey);
+        FaceCollectionChangeEvent change = new FaceCollectionChangeEvent("change", faceColleKey);
+        applicationContext.publishEvent(change);
+    }
+
+    public  boolean addPicToNewBucket(String faceKey, TaskDetailInfoDto task) {
+
+        if (clusterCount.get() > DataConfig.CLUSTER_NUM) {
+            log.warn("clusterCount={} 超出限制{}", clusterCount, DataConfig.CLUSTER_NUM);
             return false;
         }
 
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(DataConfig.TASK_PREFIX)
+        String faceColleKey = stringBuilder.append(DataConfig.TASK_PREFIX)
                 .append(":")
                 .append(task.getTaskEntity().getTaskNo())
                 .append(":set:")
-                .append(CLUSTER_COUNT.incrementAndGet());
+                .append(clusterCount.incrementAndGet()).toString();
 
-        List<String> newFaceCollePics = new ArrayList<>();
-        newFaceCollePics.add(faceKey);
-        FACE_COLLECTION_MAP.put(stringBuilder.toString(), newFaceCollePics);
+        faceCollection.add(faceColleKey);
+        addPicToExistBucket(faceKey, faceColleKey);
 
-        FaceCollectionChangeEvent change = new FaceCollectionChangeEvent("change", stringBuilder.toString());
-        applicationContext.publishEvent(change);
         return true;
     }
 
+    public  List<String> getPicsFromBucket(String faceColleKey){
+        return redisUtils.lGetAll(faceColleKey).stream().map( v -> v.toString()).collect(Collectors.toList());
+    }
+
 //    查找身份
-    public static String getIdentify(String colleKey){
-        return IDENTIFY_MAP.get(colleKey);
+    public  String getIdentify(String colleKey){
+        return identifyMap.get(colleKey);
     }
 
 //    写入确定的身份
-    public static void addIdentify(String colleKey, String studentId){
-        IDENTIFY_MAP.put(colleKey, studentId);
+    public  void addIdentify(String colleKey, String studentId){
+        identifyMap.put(colleKey, studentId);
     }
 
-    public static Iterable<String> getKeySet() {
-        return FACE_COLLECTION_MAP.keySet();
+    public  List<String> faceColleKeys() {
+        return faceCollection;
     }
 
-    public static boolean containsKey(String faceColleKey) {
-        return FACE_COLLECTION_MAP.containsKey(faceColleKey);
+    public  boolean containsKey(String faceColleKey) {
+        return faceCollection.indexOf(faceColleKey) > 0;
     }
 
 //    查找所有排序的帧
-    public static List<String> getSortedFaceKeys(){
+    public  List<String> getSortedFaceKeys(){
 
-        Collections.sort(ALL_FRAME);
-        return ALL_FRAME;
+        Collections.sort(allFrame);
+        return allFrame;
     }
 
-    public static void addFrameFaceKeys(List<String> faceKeys){
-        ALL_FRAME.addAll(faceKeys);
+    public  void addFrameFaceKeys(List<String> faceKeys){
+        allFrame.addAll(faceKeys);
     }
 
 
-    public static void main(String[] args) {
+  /*  public static void main(String[] args) {
         List<String> sortedFaceKeys = new ArrayList<>();
         sortedFaceKeys.add("b");
         sortedFaceKeys.add("a");
         System.out.println(sortedFaceKeys);
         Collections.sort(sortedFaceKeys);
         System.out.println(sortedFaceKeys);
-    }
+    }*/
 
 }

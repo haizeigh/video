@@ -29,7 +29,6 @@ message ContrastPicWithCollesRequest {
 
 message ContrastPicWithCollesResponse {
     repeated double similarity_ordered_list = 1; // 相似度结果
-    repeated string pic_colles = 2; // 图片集合的id
 }
 
 

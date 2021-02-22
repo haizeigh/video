@@ -22,23 +22,26 @@ public class FaceCollectionListener {
     @Resource
     RedisUtils redisUtils;
 
+    @Resource
+    IdentifyFacesContainer identifyFacesContainer;
+
     @EventListener
     public void listener(FaceCollectionChangeEvent event)
     {
         String colleKey = event.getColleKey();
         log.info("colleKey={} Collection change", colleKey);
-        if (!Strings.isNullOrEmpty(IdentifyFacesContainer.getIdentify(colleKey))){
+        if (!Strings.isNullOrEmpty(identifyFacesContainer.getIdentify(colleKey))){
             log.info("has identify, ignore it ");
         }
 
-        List<String> colleValue = IdentifyFacesContainer.FACE_COLLECTION_MAP.get(colleKey);
+        List<String> colleValue = identifyFacesContainer.getPicsFromBucket(colleKey);
         if (colleValue.size() % 5 == 0) {
             log.info("compare face Collection");
             String studentId = faceFeatureService.compareCollectionWithStudent(colleKey);
             if (Strings.isNullOrEmpty(studentId)){
                 return;
             }
-            IdentifyFacesContainer.addIdentify(colleKey, studentId);
+            identifyFacesContainer.addIdentify(colleKey, studentId);
 
             colleValue.stream().forEach(faceKey -> redisUtils.putHash(faceKey, DataConfig.STUDENT_ID, studentId));
 

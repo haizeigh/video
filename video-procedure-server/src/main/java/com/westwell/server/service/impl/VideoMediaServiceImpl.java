@@ -83,7 +83,7 @@ public class VideoMediaServiceImpl implements VideoMediaService {
 
         commands.add("-y");
 
-        commands.add(picsPath + "/%05d.jpeg");
+        commands.add(picsPath + "/%09d.jpeg");
         StringBuffer commandsBuffer = new StringBuffer();
         for (int i = 0; i < commands.size(); i++)
             commandsBuffer.append(commands.get(i) + " ");

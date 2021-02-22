@@ -9,6 +9,7 @@ import com.westwell.server.dto.TaskDetailInfoDto;
 import com.westwell.server.dto.TaskFinalResultDto;
 import com.westwell.server.service.ResultDumpService;
 import org.apache.commons.beanutils.BeanUtils;
+import org.apache.commons.collections.map.HashedMap;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -24,20 +25,26 @@ public class ResultDumpServiceImpl implements ResultDumpService {
     @Resource
     RedisUtils redisUtils;
 
+    @Resource
+    IdentifyFacesContainer identifyFacesContainer;
+
     @Override
-    public void dumpFrameResult(TaskDetailInfoDto task) throws Exception {
-        List<String> sortedFaceKeys = IdentifyFacesContainer.getSortedFaceKeys();
+    public void dumpFrameResult(TaskDetailInfoDto task, String textPath) throws Exception {
+        List<String> sortedFaceKeys = identifyFacesContainer.getSortedFaceKeys();
 
         String taskNo = task.getTaskEntity().getTaskNo().toString();
         String cameraNo = task.getTaskEntity().getCameraNo().toString();
 
         String mapKey = "task_no,camera_no,pic_time,frame_no,location,pic,feature,student_id,student_name";
         List<Map<String, String>> dataList = new ArrayList<>();
-        Map<String, String> map = null;
         for (String faceKey : sortedFaceKeys) {
 
-            BeanUtils.copyProperties(map, redisUtils.getHash(faceKey));
-            String[] split = faceKey.split("：");
+//            BeanUtils.copyProperties(map, redisUtils.getHash(faceKey));
+            Map<String, Object> hash = redisUtils.getHash(faceKey);
+            Map<String, String> map = new HashedMap();
+            redisUtils.getHash(faceKey).forEach((k, v) -> map.put(k, v.toString()));
+
+            String[] split = faceKey.split(":");
 
             map.put("task_no", taskNo);
             map.put("camera_no", cameraNo);
@@ -46,16 +53,13 @@ public class ResultDumpServiceImpl implements ResultDumpService {
             dataList.add(map);
         }
 
-        String path = DataConfig.IDENTIFY_CACHE_PATH
-                + "/" + DateUtils.format(new Date(), DateUtils.DATE_PATTERN
-                + "/" + task.getTaskEntity().getCameraNo());
-        File file = new File(path);
+        File file = new File(textPath);
         if (!file.exists()){
             file.mkdirs();
         }
 
         try {
-            OutputStream outputStream = new FileOutputStream(path+ "/" + "frame.csv");
+            OutputStream outputStream = new FileOutputStream(textPath+ "/" + "frame.csv");
             ExportUtil.doExport(dataList, mapKey, outputStream);
 
         } catch (FileNotFoundException e) {
@@ -66,14 +70,14 @@ public class ResultDumpServiceImpl implements ResultDumpService {
     }
 
     @Override
-    public void dumpTaskTemptResult(TaskDetailInfoDto task) {
+    public void dumpTaskTemptResult(TaskDetailInfoDto task, String textPath) {
 
     }
 
     @Override
-    public void dumpTaskFinalResult(TaskDetailInfoDto task) throws Exception {
+    public void dumpTaskFinalResult(TaskDetailInfoDto task, String textPath) throws Exception {
 
-        Map<String, String> identifyMap = IdentifyFacesContainer.IDENTIFY_MAP;
+        Map<String, String> identifyMap = identifyFacesContainer.getIdentifyMap();
         Integer taskNo = task.getTaskEntity().getTaskNo();
         Integer cameraNo = task.getTaskEntity().getCameraNo();
 
@@ -82,7 +86,7 @@ public class ResultDumpServiceImpl implements ResultDumpService {
 
         identifyMap.forEach( ( faceColleKey, studentId ) -> {
 //            遍历所有人
-            List<String> faceKeys = IdentifyFacesContainer.FACE_COLLECTION_MAP.get(faceColleKey);
+            List<String> faceKeys = identifyFacesContainer.getPicsFromBucket(faceColleKey);
             Collections.sort(faceKeys);
 
 //            遍历所有小图

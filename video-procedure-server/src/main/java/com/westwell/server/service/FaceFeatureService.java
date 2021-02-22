@@ -12,7 +12,7 @@ public interface FaceFeatureService {
     boolean extractFaceFeature(List<String> picKeys);
 
 //    rpc通知1:N人脸对比服务
-    CompareSimilarityDto compareFaceWithCollection(String faceKey);
+    CompareSimilarityDto compareFaceWithCollection(String faceKey) throws Exception;
 
 //    rpc通知N:M人脸对比服务
     Map<String, String> compareCollectionWithStudent(List<String> faceColles);

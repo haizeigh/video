@@ -31,7 +31,8 @@ public class VPException extends RuntimeException {
 		this.code = code;
 	}
 
-	public String getMsg() {
+
+    public String getMsg() {
 		return msg;
 	}
 

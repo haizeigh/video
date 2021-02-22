@@ -1,5 +1,6 @@
 package com.westwell.backend.modules.generator.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -78,7 +79,7 @@ public class StudentBaseInfoServiceImpl extends ServiceImpl<StudentBaseInfoDao, 
             studentBaseInfo.setStudentNum(num);
             studentBaseInfo.setStudentName(studentNameMap.get(num));
 
-            studentBaseInfo.setPicsUrl(paths.toString());
+            studentBaseInfo.setPicsUrl(JSON.toJSONString(paths));
             studentBaseInfo.setCreatTime(new Date());
             try {
                 saveInfo(studentBaseInfo);
@@ -100,11 +101,10 @@ public class StudentBaseInfoServiceImpl extends ServiceImpl<StudentBaseInfoDao, 
         save(studentBaseInfo);
 
 //        一个学生多张图
-        String[] filePaths = filePathsString.split(",");
+        List<String> filePaths = JSON.parseArray(filePathsString, String.class);
         List<String> filePathList = new ArrayList<String>();
 
         for (String filePath : filePaths) {
-            String[] split = filePath.split("_");
             File file = new File(filePath);
             //保存原图到reids, filePath 作为key
             String imageString = ImgTransitionUtil.imageFileToBase64(file);
@@ -120,7 +120,7 @@ public class StudentBaseInfoServiceImpl extends ServiceImpl<StudentBaseInfoDao, 
         ProtocolStringList picKeysList = detectPicsInRedisResponse.getPickeysResList();
 
         log.info("清理原图 redis");
-        Arrays.stream(filePaths).forEach(filePath -> redisUtils.delete(filePath));
+        filePaths.stream().forEach(filePath -> redisUtils.delete(filePath));
 
         if (CollectionUtils.isEmpty(picKeysList)) {
             //图片有问题  下一个
@@ -170,5 +170,6 @@ public class StudentBaseInfoServiceImpl extends ServiceImpl<StudentBaseInfoDao, 
         deletePicByIds(ids);
 
     }
+
 
 }

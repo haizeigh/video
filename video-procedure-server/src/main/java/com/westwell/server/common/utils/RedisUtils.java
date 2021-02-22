@@ -13,7 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.*;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -91,6 +93,25 @@ public class RedisUtils {
     public Map<String,Object> getHash(String key){
         return hashOperations.entries(key);
     }
+
+
+    public void sAdd(String key, Object value){
+        setOperations.add(key, value);
+    }
+
+
+    public Set<Object> sGet(String key){
+        return setOperations.members(key);
+    }
+
+    public void lPush(String key, Object value){
+        listOperations.leftPush(key, value);
+    }
+
+    public List<Object> lGetAll(String key){
+        return listOperations.range(key, 0, listOperations.size(key)-1);
+    }
+
 
     /**
      * Object转成JSON数据

@@ -33,6 +33,15 @@ public class VideoAsyncServiceImpl {
     }
 
     String getPicKey(TaskDetailInfoDto task, File image){
+//        计算当前图的时间
+        Integer frame = task.getTaskEntity().getFrame();
+        long imageNum = Long.parseLong(image.getName().split("\\.")[0]);
+        long milSec = (imageNum - 1) / frame * 1000;
+
+//        计算图的帧序号
+        long frameNum = imageNum  - (imageNum - 1) / frame * frame;
+
+
 //        wellcare:任务编号:camera_编号:时间戳:帧编号
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(" wellcare:")
@@ -40,10 +49,14 @@ public class VideoAsyncServiceImpl {
                 .append(":")
                 .append(task.getCameraInfoEntity().getCameraNo())
                 .append(":")
-                .append(task.getTaskEntity().getTaskStartTime().getTime())
+                .append(task.getTaskEntity().getTaskStartTime().getTime() + milSec )
                 .append(":")
-                .append(image.getName());
+                .append(frameNum);
 
         return stringBuilder.toString();
+    }
+
+    public static void main(String[] args) {
+        System.out.println(Long.parseLong("00030"));
     }
 }

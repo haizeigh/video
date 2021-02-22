@@ -8,7 +8,8 @@ public interface FaceIdentifyService {
 
 
 //    识别人物
-    boolean identifyFaces(TaskDetailInfoDto task, List<String> faceKeyList);
+    boolean identifyFaces(TaskDetailInfoDto task, List<String> faceKeyList) throws Exception;
 
 
+    void clearContainerCache();
 }

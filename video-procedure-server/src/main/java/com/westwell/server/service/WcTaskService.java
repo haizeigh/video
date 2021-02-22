@@ -16,5 +16,7 @@ public interface WcTaskService {
 
 //    创建任务
     TaskDetailInfoDto getOneTaskDetailInfoDto();
+
+    void update(WcTaskEntity taskEntity);
 }
 

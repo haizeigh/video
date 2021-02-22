@@ -63,7 +63,7 @@ public class FeatureServiceServer {
 
             List<String> coll = new ArrayList<>();
             coll.add(request.getPicColles(0));
-            builder.addAllPicColles(coll);
+//            builder.addAllPicColles(coll);
 
             responseObserver.onNext(builder.build());
             responseObserver.onCompleted();

@@ -42,8 +42,8 @@ public class WcTaskServiceImpl implements WcTaskService {
                 .taskStatus(TaskStatusEnum.DOING.getCode())
                 .taskStartTime(new Date())
                 .frame(DataConfig.FRAME)
-                .videoStartTime(DateUtils.stringToDate(DataConfig.TASK_START_TIME))
-                .videoEndTime(DateUtils.stringToDate(DataConfig.TASK_END_TIME))
+                .videoStartTime(DateUtils.stringToDate(DataConfig.VIDEO_START_TIME))
+                .videoEndTime(DateUtils.stringToDate(DataConfig.VIDEO_END_TIME))
                 .build();
         wcTaskDao.insertSelective(taskEntity);
 
@@ -53,5 +53,10 @@ public class WcTaskServiceImpl implements WcTaskService {
                 .cameraInfoEntity(cameraInfoEntity)
                 .build();
         return taskDetailInfoDto;
+    }
+
+    @Override
+    public void update(WcTaskEntity taskEntity) {
+        wcTaskDao.updateByPrimaryKeySelective(taskEntity);
     }
 }
