@@ -51,6 +51,7 @@ public class StudentBaseInfoServiceImpl extends ServiceImpl<StudentBaseInfoDao, 
     }
 
     @Override
+    @Transactional
     public void saveByPath(String path) throws Exception {
 
 
@@ -88,14 +89,19 @@ public class StudentBaseInfoServiceImpl extends ServiceImpl<StudentBaseInfoDao, 
             }
 
         });
+        //通知更新全部学生
+        log.info("通知更新全部学生底库数据");
+        StudentPicUpdateResponse studentPicUpdateResponse = featureServiceBlockingStub.studentsAllUpdate(null);
+        if ( !studentPicUpdateResponse.getSuccess().equals("success")){
+            throw new VPBException("通知特征服务更新异常");
+        }
+
     }
 
     @Override
     public boolean saveStudentPic(StudentBaseInfoEntity studentBaseInfo) throws Exception {
 
         String filePathsString = studentBaseInfo.getPicsUrl();
-        log.info("保存db数据");
-        save(studentBaseInfo);
 
 //        一个学生多张图
         List<String> filePaths = JSON.parseArray(filePathsString, String.class);
@@ -146,25 +152,62 @@ public class StudentBaseInfoServiceImpl extends ServiceImpl<StudentBaseInfoDao, 
     @Transactional
     public void saveInfo(StudentBaseInfoEntity studentBaseInfo) throws Exception {
 
+        log.info("保存学生底库数据");
         save(studentBaseInfo);
         saveStudentPic(studentBaseInfo);
+        //通知更新单个学生
+        notifyUpdate(studentBaseInfo.getId().toString());
 
+    }
+
+    private void notifyUpdate(String id) {
+
+        log.info("通知更新学生底库数据");
+        StudentPicUpdateRequest request = StudentPicUpdateRequest.newBuilder().addStudentNums(id).build();
+        StudentPicUpdateResponse studentPicUpdateResponse = featureServiceBlockingStub.studentPicUpdate(request);
+        if ( !studentPicUpdateResponse.getSuccess().equals("success")){
+            throw new VPBException("通知特征服务更新异常");
+        }
     }
 
     @Override
     @Transactional
     public void updateInfoById(StudentBaseInfoEntity studentBaseInfo) throws Exception {
 
+        log.info("更新学生底库数据");
         updateById(studentBaseInfo);
         saveStudentPic(studentBaseInfo);
+        //通知更新单个学生
+        notifyUpdate(studentBaseInfo.getId().toString());
     }
 
     @Override
     @Transactional
     public void removeInfoByIds(List<Integer> ids) {
 
+        log.info("删除学生底库数据");
         removeByIds(ids);
-        deletePicByIds(ids);
+        ids.forEach(id -> {
+            redisUtils.hDelete(SMARTK_BASE, id.toString());
+            //通知更新单个学生
+            notifyUpdate(id.toString());
+        });
+
+    }
+
+    @Override
+    public void syncUnit(String unit) {
+
+        Map<String, Object> params = new HashedMap();
+        params.put("limit", Integer.MAX_VALUE);
+        PageUtils pageUtils = queryPage(params);
+
+        pageUtils.getList().stream().forEach( entity -> {
+            StudentBaseInfoEntity studentBaseInfoEntity = (StudentBaseInfoEntity) entity;
+            notifyUpdate(studentBaseInfoEntity.getId().toString());
+        });
+
+
 
     }
 

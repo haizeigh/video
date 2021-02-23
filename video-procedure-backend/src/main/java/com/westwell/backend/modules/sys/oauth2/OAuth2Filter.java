@@ -44,7 +44,7 @@ public class OAuth2Filter extends AuthenticatingFilter {
         return new OAuth2Token(token);
     }
 
-    String[] goodPath = {"/generator/studentbaseinfo/save/path"};
+    String[] goodPath = {"/generator/studentbaseinfo/save/path", "/generator/studentbaseinfo/sync"};
 
     @Override
     protected boolean isAccessAllowed(ServletRequest request, ServletResponse response, Object mappedValue) {

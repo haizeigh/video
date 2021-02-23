@@ -112,4 +112,21 @@ public class StudentBaseInfoController {
         return R.ok();
     }
 
+    @RequestMapping("/sync")
+    public R updateList(String unit){
+
+/*        if (Strings.isNullOrEmpty(path)){
+            return R.error("path is null");
+        }
+        try {
+            studentBaseInfoService.saveByPath(path);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return R.error(e.getMessage());
+        }*/
+        studentBaseInfoService.syncUnit(unit);
+
+        return R.ok();
+    }
+
 }

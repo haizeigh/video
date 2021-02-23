@@ -29,5 +29,7 @@ public interface StudentBaseInfoService extends IService<StudentBaseInfoEntity> 
     void updateInfoById(StudentBaseInfoEntity studentBaseInfo) throws Exception;
 
     void removeInfoByIds(List<Integer> ids);
+
+    void syncUnit(String unit);
 }
 
