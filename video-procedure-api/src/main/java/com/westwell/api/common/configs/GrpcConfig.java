@@ -47,7 +47,8 @@ public class GrpcConfig {
 
     @Bean("feature")
     public ManagedChannel managedChannel2(@Qualifier("grpcTaskExecutor") Executor executor){
-        ManagedChannel channel = ManagedChannelBuilder.forAddress("10.66.66.20", 50051)
+//        ManagedChannel channel = ManagedChannelBuilder.forAddress("10.66.66.20", 50050)
+        ManagedChannel channel = ManagedChannelBuilder.forAddress("10.66.65.200", 50050)
                 .usePlaintext(true)
                 .executor(executor)
                 .build();

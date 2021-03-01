@@ -127,6 +127,7 @@ public class StudentBaseInfoServiceImpl extends ServiceImpl<StudentBaseInfoDao, 
         String[] filePaths = filePathsString.split(",");
 
         List<String> imageKeyList = new ArrayList<String>();
+        List<String> faceKeysList = new ArrayList<String>();
 
         for (String filePath : filePaths) {
             File file = new File(filePath);
@@ -140,35 +141,58 @@ public class StudentBaseInfoServiceImpl extends ServiceImpl<StudentBaseInfoDao, 
             String name = filePrefix + "_" + split[0] + "_" + split[2];
             imageKeyList.add(name);
             redisUtils.set(name, imageString);
-//            filePathList.add(filePath);
+
 //            每张图片检测 自取最大面积的小图
             List<String> childFaceList = new ArrayList<String>();
             childFaceList.add(name);
 
+            //截取小图
+            PicsInRedisRequest.Builder picBuilder = PicsInRedisRequest.newBuilder();
+            picBuilder.addAllPickeysReq(childFaceList);
+            DetectPicsInRedisResponse detectPicsInRedisResponse = detectionServiceBlockingStub.detectPicsInRedis(picBuilder.build());
+            ProtocolStringList picKeysList = detectPicsInRedisResponse.getPickeysResList();
+            if ( CollectionUtils.isEmpty(picKeysList) ){
+                log.info("存在检测不到小图的情况， redis的key = " + name);
+                continue;
+            }else if ( picKeysList.size() > 1){
+//                处理多余一个的情况
+                String bigPicKey = "" ;
+                Integer area = 0;
+
+                for (int i = 0; i < picKeysList.size(); i++) {
+                    String thisPic = picKeysList.get(i);
+                    String location = redisUtils.getHash(thisPic, "location").toString();
+                    String[] locationSplit = location.split("_");
+                    int x1 = Integer.parseInt(locationSplit[0]);
+                    int y1 = Integer.parseInt(locationSplit[1]);
+                    int x2 = Integer.parseInt(locationSplit[2]);
+                    int y2 = Integer.parseInt(locationSplit[3]);
+                    Integer thisArea = (x2 - x1) * (y2 -y1);
+                    if ( thisArea > area){
+                        area = thisArea;
+                        bigPicKey = thisPic;
+                    }
+                }
+                faceKeysList.add(bigPicKey);
+            }else {
+                faceKeysList.addAll(picKeysList);
+            }
         }
 
-        PicsInRedisRequest.Builder picBuilder = PicsInRedisRequest.newBuilder();
-        picBuilder.addAllPickeysReq(imageKeyList);
-        DetectPicsInRedisResponse detectPicsInRedisResponse = detectionServiceBlockingStub.detectPicsInRedis(picBuilder.build());
-        ProtocolStringList picKeysList = detectPicsInRedisResponse.getPickeysResList();
+
 
         log.info("清理原图 redis");
         imageKeyList.stream().forEach(filePath -> redisUtils.delete(filePath));
 
-        if (CollectionUtils.isEmpty(picKeysList)) {
-            //图片有问题  下一个
-            log.info("检测不到人面部图，还原db");
-            throw new VPBException("检测不到人面部图");
-        }
 
 //            抽取特征
         log.info("抽取特征");
-        FacePicsInRedisRequest facePicsInRedisRequest = FacePicsInRedisRequest.newBuilder().addAllPicKeys(picKeysList).build();
+        FacePicsInRedisRequest facePicsInRedisRequest = FacePicsInRedisRequest.newBuilder().addAllPicKeys(faceKeysList).build();
         featureServiceBlockingStub.extractFeatureInRedis(facePicsInRedisRequest);
 //             if (extractFeatureInRedisResponse.getSuccess().equals();)
 //            保存到redis
         log.info("抽取保存小图redis ");
-        redisUtils.putHash(SMARTK_BASE, studentBaseInfo.getId().toString(), getPathString(picKeysList));
+        redisUtils.putHash(SMARTK_BASE, studentBaseInfo.getId().toString(), getPathString(faceKeysList));
         return true;
     }
 

@@ -71,7 +71,7 @@ public class StudentBaseInfoController {
      * 修改
      */
     @RequestMapping("/update")
-    @RequiresPermissions("generator:studentbaseinfo:update")
+//    @RequiresPermissions("generator:studentbaseinfo:update")
     public R update(@RequestBody StudentBaseInfoEntity studentBaseInfo){
         try {
             studentBaseInfoService.updateInfoById(studentBaseInfo);

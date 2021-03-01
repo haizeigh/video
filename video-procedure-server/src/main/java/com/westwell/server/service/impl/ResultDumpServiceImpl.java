@@ -1,6 +1,5 @@
 package com.westwell.server.service.impl;
 
-import com.westwell.api.common.utils.DateUtils;
 import com.westwell.server.common.configs.DataConfig;
 import com.westwell.server.common.utils.ExportUtil;
 import com.westwell.server.common.utils.RedisUtils;
@@ -18,7 +17,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class ResultDumpServiceImpl implements ResultDumpService {
@@ -93,34 +95,33 @@ public class ResultDumpServiceImpl implements ResultDumpService {
 //            遍历所有小图
             faceKeys.forEach(faceKey -> {
 
-                TaskFinalResultDto lastTaskFinalResultDto = dataList.get(dataList.size() - 1);
-                String[] split = faceKey.split("：");
+                String[] split = faceKey.split(":");
                 String location = redisUtils.getHash(faceKey, "location").toString();
                 String thisStudentId = redisUtils.getHash(faceKey, DataConfig.STUDENT_ID).toString();
                 long faceSec = Long.parseLong(split[split.length - 3]) / 1000;
 
+//                初始化
                 if (CollectionUtils.isEmpty(dataList)){
                     insertFinalResult(taskNo, cameraNo, dataList, location, thisStudentId, faceSec);
                     return;
                 }
+                TaskFinalResultDto lastTaskFinalResultDto = dataList.get(dataList.size() - 1);
 
-//                小于间隔的话整合
+//               和前一个对比 小于间隔的话整合
                 if (lastTaskFinalResultDto != null
                         && lastTaskFinalResultDto.getStudent_id().equals(thisStudentId)
                         && faceSec - lastTaskFinalResultDto.getEnd_time() < 300 ){
                     lastTaskFinalResultDto.setEnd_time(faceSec);
                     lastTaskFinalResultDto.getLocations().add(location);
                 }else {
+//                    新插入数据
                     insertFinalResult(taskNo, cameraNo, dataList, location, thisStudentId, faceSec);
                 }
             });
         } );
 
 
-        String path = DataConfig.IDENTIFY_CACHE_PATH
-                + "/" + DateUtils.format(new Date(), DateUtils.DATE_PATTERN
-                + "/" + task.getTaskEntity().getCameraNo());
-        File file = new File(path);
+        File file = new File(textPath);
         if (!file.exists()){
             file.mkdirs();
         }
@@ -131,7 +132,7 @@ public class ResultDumpServiceImpl implements ResultDumpService {
             collect.add(describe);
         }
 
-        OutputStream outputStream = new FileOutputStream(path+ "/" + "final.csv");
+        OutputStream outputStream = new FileOutputStream(textPath+ "/" + "final.csv");
         ExportUtil.doExport(collect, mapKey, outputStream);
 
 

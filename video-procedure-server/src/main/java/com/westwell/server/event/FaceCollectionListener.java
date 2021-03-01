@@ -37,7 +37,7 @@ public class FaceCollectionListener {
         }
 
         List<String> colleValue = identifyFacesContainer.getPicsFromBucket(colleKey);
-        if (colleValue.size() % 1 == 0) {
+        if (colleValue.size() % DataConfig.INTER_FRE == 0) {
             log.info("compare face Collection");
             String studentId = faceFeatureService.compareCollectionWithStudent(colleKey);
             if (Strings.isNullOrEmpty(studentId)){

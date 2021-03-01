@@ -3,39 +3,8 @@ package com.westwell.server.common.utils;
 public class FfmpegUtil {
 
     //    视频截图
-    public static Process cutPics(String commands) throws Exception {
-/*
-        File file = new File(picsPath);
-        if (!file.exists()) {
-            file.mkdirs();
-        }
+    public static Process exec(String commands) throws Exception {
 
-        List<String> commands = new java.util.ArrayList<String>();
-        commands.add(DataConfig.FFMPEG_PATH);
-//        commands.add("ffmpeg");
-
-        commands.add("-i");
-        commands.add(videoPath);
-
-        commands.add("-t");
-        commands.add("5");
-
-        commands.add("-r");
-        commands.add("10");
-
-        commands.add("-q:v");
-        commands.add("2");
-
-        commands.add("-f");
-        commands.add("image2");
-
-        commands.add("-y");
-
-        commands.add(picsPath + "/%09d.jpeg");
-        StringBuffer commandsBuffer = new StringBuffer();
-        for (int i = 0; i < commands.size(); i++)
-            commandsBuffer.append(commands.get(i) + " ");
-        System.out.println("command is : " + commandsBuffer);*/
         Process proc = null;
         try {
 //            这里需要执行"sh", "-c" 不然造成 No such file or directory
@@ -57,7 +26,7 @@ public class FfmpegUtil {
     public static void main(String[] args) throws Exception {
 
 //        FfmpegUtil ff = new FfmpegUtil();
-        Process process = cutPics("rtsp://admin:xijingkeji123@10.66.64.57:554/Streaming/tracks/101?starttime=20210201t000000z&endtime=20210201t000005z" + "/home/westwell/java/file2");
+        Process process = exec("rtsp://admin:xijingkeji123@10.66.64.57:554/Streaming/tracks/101?starttime=20210201t000000z&endtime=20210201t000005z" + "/home/westwell/java/file2");
         int exit = 0;
         if ((exit = process.waitFor()) == 0) {
             System.out.println("---执行结果：---" + (exit == 0 ? "【成功】" : "【失败】"));

@@ -53,10 +53,10 @@ public class FaceIdentifyServiceImpl implements FaceIdentifyService {
 
             String tempFaceColleKey = compareSimilarityDto.getPicColleKey();
 //            识别出出来了具体人物
-            String identify = identifyFacesContainer.getIdentify(tempFaceColleKey, task);
             if (!Strings.isNullOrEmpty(tempFaceColleKey)
                     && identifyFacesContainer.containsKey(tempFaceColleKey, task)
-                    && !Strings.isNullOrEmpty(identify)) {
+                    && !Strings.isNullOrEmpty(identifyFacesContainer.getIdentify(tempFaceColleKey, task))) {
+                String identify = identifyFacesContainer.getIdentify(tempFaceColleKey, task);
                 log.debug("find the student" + identify);
                 redisUtils.putHash(faceKey, DataConfig.STUDENT_ID, identify);
             }

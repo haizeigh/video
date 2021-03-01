@@ -40,7 +40,10 @@ public class DataConfig {
 //    人物相似度的阀值
     public static double MAX_SIMILARITY = 0.9;
 
-    public static double MIN_SIMILARITY = 0.0;
+    public static double MIN_SIMILARITY = 0.6;
+
+//    比对底库的频率
+    public static int INTER_FRE = 1;
 
 //    代表学生身份的field
     public static String STUDENT_ID = "student_id";
@@ -48,6 +51,7 @@ public class DataConfig {
 //    保存输出文件的地址
     public static String IDENTIFY_CACHE_PATH = "/home/westwell/java/file/identify";
 
+    public static String WELL_CARE_BASE = "wellcare:base";
 
 
     public static void main(String[] args) {

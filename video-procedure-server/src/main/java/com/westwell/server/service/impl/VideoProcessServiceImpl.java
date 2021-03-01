@@ -1,7 +1,5 @@
 package com.westwell.server.service.impl;
 
-import com.westwell.api.common.utils.DateUtils;
-import com.westwell.server.common.configs.DataConfig;
 import com.westwell.server.common.enums.TaskStatusEnum;
 import com.westwell.server.common.exception.VPException;
 import com.westwell.server.container.IdentifyFacesContainer;
@@ -10,11 +8,14 @@ import com.westwell.server.dto.TaskDetailInfoDto;
 import com.westwell.server.entity.WcTaskEntity;
 import com.westwell.server.service.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.Future;
 
 @Slf4j
 @Service
@@ -39,36 +40,41 @@ public class VideoProcessServiceImpl implements VideoProcessService {
     IdentifyFacesContainer identifyFacesContainer;
 
     @Override
-    public TaskDetailInfoDto detectVideo(Integer cameraNo, Date videoStartTime, Date videoEndTime)  {
+    @Async("taskExecutor")
+    public Future<TaskDetailInfoDto> detectVideo(Integer cameraNo, Date videoStartTime, Date videoEndTime)  {
 
 
         TaskDetailInfoDto task = null;
         try {
-            
-//            处理截图
+
+//            初始化任务
             task = wcTaskService.getOneTaskDetailInfoDto(cameraNo, videoStartTime, videoEndTime);
 
+            //下载视频
+            log.info("下载视频...");
+            boolean readVideo = videoMediaService.readVideo(task);
+            if (!readVideo){
+                throw new VPException( task + "任务下载视频错误");
+            }
 
-            String picPath = DataConfig.PIC_CACHE_PATH
-                    + "/" + DateUtils.format(new Date(), DateUtils.DATE_PATTERN)
-                    + "/" + task.getTaskEntity().getCameraNo()
-                    + "/" + DateUtils.format(task.getTaskEntity().getVideoStartTime(), DateUtils.DATE_TIME);
-            boolean cutVideoToPics = videoMediaService.cutVideoToPics(task, picPath);
+//            String picPath = task.getTaskPath();
+            boolean cutVideoToPics = videoMediaService.cutVideoToPics(task);
             if (!cutVideoToPics) {
                 throw new VPException("ffmpeg 截图出错");
             }
 
 //           FFMPEG_PATH配置
             log.info("原图保存redis...");
-            List<String> picKeyList = videoMediaService.writePicsToRedis(task, picPath);
+            List<String> picKeyList = videoMediaService.writePicsToRedis(task);
 
 //            检测人脸
             log.info("人脸检测...");
             List<String> faceKeyList = faceDetectionService.detectFacesInPic(picKeyList);
 
-//            todo 测试 输出小图
-            log.info("输出临时数据");
+            log.info("输出每一帧面部");
             videoMediaService.readPicsFromRedis(task, faceKeyList);
+
+            log.info("输出底库");
             videoMediaService.readBasePicsFromRedis(task);
 //            保存面部图
             faceDetectionService.storeFaces(task, faceKeyList);
@@ -83,9 +89,11 @@ public class VideoProcessServiceImpl implements VideoProcessService {
             log.info("开始人物识别..");
             faceIdentifyService.identifyFaces(task, faceKeyList);
 
-            // todo 测试 底库图
-            log.info("输出临时底库的图片");
+            log.info("输出临时底库无标签的图片");
             videoMediaService.readPicCollesFromRedis(task);
+
+            log.info("输出临时底库有标签的图片");
+            videoMediaService.readfacesCollesFromRedis(task);
 
         } catch (Exception e) {
 
@@ -98,7 +106,7 @@ public class VideoProcessServiceImpl implements VideoProcessService {
 
         log.info("解析成功");
         UpdateTaskStatus(task, TaskStatusEnum.SUCCESS);
-        return task;
+        return new AsyncResult(task);
     }
 
     public void clearVideoCache(TaskDetailInfoDto task) {

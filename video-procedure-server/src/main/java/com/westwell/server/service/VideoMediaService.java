@@ -6,11 +6,11 @@ import java.util.List;
 
 public interface VideoMediaService {
 
-//    剪切视频的帧
-    boolean cutVideoToPics(TaskDetailInfoDto task, String picsPath);
+    //    剪切视频的帧
+    boolean cutVideoToPics(TaskDetailInfoDto task);
 
-//    把图片保存到redis
-    List<String> writePicsToRedis(TaskDetailInfoDto task, String picsPath) throws Exception;
+    //    把图片保存到redis
+    List<String> writePicsToRedis(TaskDetailInfoDto task) throws Exception;
 
     void readPicsFromRedis(TaskDetailInfoDto task, List<String> faceKeys) throws Exception;
 
@@ -19,4 +19,9 @@ public interface VideoMediaService {
     void readPicCollesFromRedis(TaskDetailInfoDto task);
 
     void readBasePicsFromRedis(TaskDetailInfoDto task);
+
+    //    下载视频
+    boolean readVideo(TaskDetailInfoDto task);
+
+    void readfacesCollesFromRedis(TaskDetailInfoDto task);
 }

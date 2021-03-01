@@ -58,7 +58,13 @@ public class FaceFeatureServiceImpl implements FaceFeatureService {
         List<Double> similarityOrderedListList = new ArrayList<>(similarityListForQuery);
 
         CompareSimilarityDto compareSimilarityDto = new CompareSimilarityDto();
-        if (similarityOrderedListList.get(similarityOrderedListList.size() -1) > DataConfig.MAX_SIMILARITY){
+
+//        存在大于阈值的情况
+        Optional<Double> firstOverSimilarity = similarityOrderedListList
+                .stream()
+                .filter(similarity -> similarity > DataConfig.MAX_SIMILARITY )
+                .findFirst();
+        if (firstOverSimilarity.isPresent()){
             log.info("too much similarity");
 //            太似性 返回最相似
             compareSimilarityDto.setOverSimilarity(true);
@@ -72,6 +78,7 @@ public class FaceFeatureServiceImpl implements FaceFeatureService {
             return compareSimilarityDto;
         }
 
+
         if (similarityOrderedListList.get(0) < DataConfig.MIN_SIMILARITY){
 //            都不相似，单独的结果 不用比较
             log.info("very less similarity");
@@ -84,6 +91,7 @@ public class FaceFeatureServiceImpl implements FaceFeatureService {
                 .filter(similarity -> similarity <= DataConfig.MAX_SIMILARITY && similarity >= DataConfig.MIN_SIMILARITY)
                 .findFirst();
         Double rightNum = first.get();
+
 
         int rightNumIndex = similarityListForQuery.indexOf(rightNum);
         String rightNumPicColle = picCollesList.get(rightNumIndex);

@@ -44,7 +44,7 @@ public class OAuth2Filter extends AuthenticatingFilter {
         return new OAuth2Token(token);
     }
 
-    String[] goodPath = {"/generator/studentbaseinfo/save/path", "/generator/studentbaseinfo/sync"};
+    String[] goodPath = {"/generator/studentbaseinfo"};
 
     @Override
     protected boolean isAccessAllowed(ServletRequest request, ServletResponse response, Object mappedValue) {
@@ -52,7 +52,7 @@ public class OAuth2Filter extends AuthenticatingFilter {
             return true;
         }
 //        System.out.println(((HttpServletRequest) request).getServletPath());
-        if (Arrays.stream(goodPath).anyMatch( path -> ((HttpServletRequest) request).getServletPath().equals(path) )) {
+        if (Arrays.stream(goodPath).anyMatch( path -> ((HttpServletRequest) request).getServletPath().startsWith(path) )) {
             return true;
         }
 

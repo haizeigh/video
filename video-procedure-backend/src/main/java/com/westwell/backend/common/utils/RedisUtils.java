@@ -103,6 +103,10 @@ public class RedisUtils {
         hashOperations.put(key, field, value);
     }
 
+    public Object getHash(String key, String field){
+        return hashOperations.get(key, field);
+    }
+
     public void hDelete(String key, String field){
         hashOperations.delete(key, field);
     }
