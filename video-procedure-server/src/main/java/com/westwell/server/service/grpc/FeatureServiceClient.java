@@ -1,8 +1,10 @@
 package com.westwell.server.service.grpc;
 
 
-import com.google.protobuf.ProtocolStringList;
-import com.westwell.api.*;
+import com.westwell.api.ContrastCollesWithBaseInfoResponse;
+import com.westwell.api.DetectionServiceGrpc;
+import com.westwell.api.FeatureServiceGrpc;
+import com.westwell.api.PicsInRedisRequest;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
@@ -13,7 +15,7 @@ public class FeatureServiceClient {
 
     public static void main(String[] args) {
 
-        ManagedChannel channel = ManagedChannelBuilder.forAddress("10.66.64.16", 50051)
+        ManagedChannel channel = ManagedChannelBuilder.forAddress("127.0.0.1", 8087)
                 .usePlaintext(true)
                 .build();
 
@@ -29,12 +31,14 @@ public class FeatureServiceClient {
         PicsInRedisRequest.Builder picbuilder = PicsInRedisRequest.newBuilder();
         picbuilder.addAllPickeysReq(nums);
 
-        DetectPicsInRedisResponse detectPicsInRedisResponse = detectionServiceBlockingStub.detectPicsInRedis(picbuilder.build());
+//        DetectPicsInRedisResponse detectPicsInRedisResponse = detectionServiceBlockingStub.detectPicsInRedis(picbuilder.build());
+//        System.out.println(detectPicsInRedisResponse.hashCode());
+/*
         ProtocolStringList pickeysResList = detectPicsInRedisResponse.getPickeysResList();
 
         for (String s : pickeysResList) {
             System.out.println(s);
-        }
+        }*/
 //        System.out.println(pickeysResList.get(0));
 /*
 
@@ -58,6 +62,9 @@ public class FeatureServiceClient {
                         .build());
         System.out.println(contrastPicWithCollesResponse.getSimilarityOrderedList(0));
 */
+
+        ContrastCollesWithBaseInfoResponse contrastCollesWithBaseInfoResponse = stub.contrastCollesWithBaseInfoInRedis(null);
+//        System.out.println(contrastCollesWithBaseInfoResponse.getColleWithStudentResultsList().get(0).getStudentNum());
 
         channel.shutdown();
     }

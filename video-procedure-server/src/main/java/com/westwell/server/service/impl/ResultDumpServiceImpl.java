@@ -9,6 +9,7 @@ import com.westwell.server.dto.TaskDetailInfoDto;
 import com.westwell.server.dto.TaskFinalResultDto;
 import com.westwell.server.service.ResultDumpService;
 import org.apache.commons.beanutils.BeanUtils;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.map.HashedMap;
 import org.springframework.stereotype.Service;
 
@@ -30,7 +31,7 @@ public class ResultDumpServiceImpl implements ResultDumpService {
 
     @Override
     public void dumpFrameResult(TaskDetailInfoDto task, String textPath) throws Exception {
-        List<String> sortedFaceKeys = identifyFacesContainer.getSortedFaceKeys();
+        List<String> sortedFaceKeys = identifyFacesContainer.getSortedFaceKeys(task);
 
         String taskNo = task.getTaskEntity().getTaskNo().toString();
         String cameraNo = task.getTaskEntity().getCameraNo().toString();
@@ -77,7 +78,7 @@ public class ResultDumpServiceImpl implements ResultDumpService {
     @Override
     public void dumpTaskFinalResult(TaskDetailInfoDto task, String textPath) throws Exception {
 
-        Map<String, String> identifyMap = identifyFacesContainer.getIdentifyMap();
+        Map<String, String> identifyMap = identifyFacesContainer.getVideoIdentifyMap(task);
         Integer taskNo = task.getTaskEntity().getTaskNo();
         Integer cameraNo = task.getTaskEntity().getCameraNo();
 
@@ -91,11 +92,17 @@ public class ResultDumpServiceImpl implements ResultDumpService {
 
 //            遍历所有小图
             faceKeys.forEach(faceKey -> {
+
                 TaskFinalResultDto lastTaskFinalResultDto = dataList.get(dataList.size() - 1);
                 String[] split = faceKey.split("：");
                 String location = redisUtils.getHash(faceKey, "location").toString();
                 String thisStudentId = redisUtils.getHash(faceKey, DataConfig.STUDENT_ID).toString();
                 long faceSec = Long.parseLong(split[split.length - 3]) / 1000;
+
+                if (CollectionUtils.isEmpty(dataList)){
+                    insertFinalResult(taskNo, cameraNo, dataList, location, thisStudentId, faceSec);
+                    return;
+                }
 
 //                小于间隔的话整合
                 if (lastTaskFinalResultDto != null
@@ -104,18 +111,7 @@ public class ResultDumpServiceImpl implements ResultDumpService {
                     lastTaskFinalResultDto.setEnd_time(faceSec);
                     lastTaskFinalResultDto.getLocations().add(location);
                 }else {
-
-                    List<String> locations = new ArrayList<>();
-                    locations.add(location);
-                    TaskFinalResultDto taskFinalResultDto = TaskFinalResultDto.builder()
-                            .task_no(taskNo.toString())
-                            .camera_no(cameraNo.toString())
-                            .student_id(thisStudentId)
-//                            .label("")
-                            .start_time(faceSec)
-                            .end_time(faceSec)
-                            .locations(locations).build();
-                    dataList.add(taskFinalResultDto);
+                    insertFinalResult(taskNo, cameraNo, dataList, location, thisStudentId, faceSec);
                 }
             });
         } );
@@ -139,5 +135,19 @@ public class ResultDumpServiceImpl implements ResultDumpService {
         ExportUtil.doExport(collect, mapKey, outputStream);
 
 
+    }
+
+    private void insertFinalResult(Integer taskNo, Integer cameraNo, List<TaskFinalResultDto> dataList, String location, String thisStudentId, long faceSec) {
+        List<String> locations = new ArrayList<>();
+        locations.add(location);
+        TaskFinalResultDto taskFinalResultDto = TaskFinalResultDto.builder()
+                .task_no(taskNo.toString())
+                .camera_no(cameraNo.toString())
+                .student_id(thisStudentId)
+//                            .label("")
+                .start_time(faceSec)
+                .end_time(faceSec)
+                .locations(locations).build();
+        dataList.add(taskFinalResultDto);
     }
 }

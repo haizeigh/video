@@ -11,5 +11,6 @@ public interface FaceIdentifyService {
     boolean identifyFaces(TaskDetailInfoDto task, List<String> faceKeyList) throws Exception;
 
 
-    void clearContainerCache();
+    void clearVideoCache(TaskDetailInfoDto task);
+
 }

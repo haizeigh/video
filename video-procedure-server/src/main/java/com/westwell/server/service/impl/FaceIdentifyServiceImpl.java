@@ -4,6 +4,7 @@ import com.google.common.base.Strings;
 import com.westwell.server.common.configs.DataConfig;
 import com.westwell.server.common.utils.RedisUtils;
 import com.westwell.server.container.IdentifyFacesContainer;
+import com.westwell.server.container.VideoContainer;
 import com.westwell.server.dto.CompareSimilarityDto;
 import com.westwell.server.dto.TaskDetailInfoDto;
 import com.westwell.server.service.FaceFeatureService;
@@ -40,24 +41,24 @@ public class FaceIdentifyServiceImpl implements FaceIdentifyService {
             return false;
         }
 
-        identifyFacesContainer.addPicToNewBucket(faceKeyList.get(0), task);
+        identifyFacesContainer.initBucket(faceKeyList, task);
 
         for (String faceKey : faceKeyList) {
 
 //            把面部图归队
-            CompareSimilarityDto compareSimilarityDto = faceFeatureService.compareFaceWithCollection(faceKey);
+            CompareSimilarityDto compareSimilarityDto = faceFeatureService.compareFaceWithCollection(task, faceKey);
             if (compareSimilarityDto == null) {
                 continue;
             }
 
             String tempFaceColleKey = compareSimilarityDto.getPicColleKey();
 //            识别出出来了具体人物
+            String identify = identifyFacesContainer.getIdentify(tempFaceColleKey, task);
             if (!Strings.isNullOrEmpty(tempFaceColleKey)
-                    && identifyFacesContainer.containsKey(tempFaceColleKey)
-                    && !Strings.isNullOrEmpty(identifyFacesContainer.getIdentify(tempFaceColleKey))) {
-                log.debug("find student");
-                redisUtils.putHash(faceKey, DataConfig.STUDENT_ID, identifyFacesContainer.getIdentify(tempFaceColleKey));
-//                continue;
+                    && identifyFacesContainer.containsKey(tempFaceColleKey, task)
+                    && !Strings.isNullOrEmpty(identify)) {
+                log.debug("find the student" + identify);
+                redisUtils.putHash(faceKey, DataConfig.STUDENT_ID, identify);
             }
 
 
@@ -69,26 +70,35 @@ public class FaceIdentifyServiceImpl implements FaceIdentifyService {
 
             if (!Strings.isNullOrEmpty(tempFaceColleKey)) {
 //             归队
-                identifyFacesContainer.addPicToExistBucket(faceKey, tempFaceColleKey);
+                log.info( faceKey + "加入底库" + tempFaceColleKey);
+                identifyFacesContainer.addPicToExistBucket(faceKey, tempFaceColleKey, task);
             } else {
 //             增加新的集合
+                log.info(faceKey + "创建新的底库");
                 identifyFacesContainer.addPicToNewBucket(faceKey, task);
             }
         }
         return true;
     }
 
-    @Override
-    public void clearContainerCache() {
 
-        log.info("开始清理容器数据");
-//        本地图片 redis原图 redis小图 redis小图集合 帧集合
-        videoMediaService.clearPicsInRedis(identifyFacesContainer.getAllFrame());
+    public void clearVideoCache(TaskDetailInfoDto task) {
+        log.info("格式化单次任务");
 
-        List<String> faceCollection = identifyFacesContainer.getFaceCollection();
-        videoMediaService.clearPicsInRedis(faceCollection);
+        VideoContainer videoContainer = identifyFacesContainer.getIdentifyMap().get(task.getTaskCameraPrefix());
+        if (videoContainer == null){
+            return;
+        }
 
-        identifyFacesContainer.init();
+        List<String> sortedFaceKeys = identifyFacesContainer.getSortedFaceKeys(task);
+        videoMediaService.clearListInRedis(sortedFaceKeys);
+
+        List<String> list = identifyFacesContainer.faceColleKeys(task);
+        videoMediaService.clearListInRedis(list);
+        identifyFacesContainer.getIdentifyMap().remove(task.getTaskCameraPrefix());
+
     }
+
+
 
 }

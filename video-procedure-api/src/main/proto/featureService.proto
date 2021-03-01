@@ -37,7 +37,7 @@ message ContrastCollesWithBaseInfoRequest {
 }
 
 message ContrastCollesWithBaseInfoResponse {
-    repeated ColleWithStudentResult colle_with_student_results = 1; // 图片集合和学生学号
+    repeated string colle_with_student_results = 1; // 图片集合和学生学号
 }
 
 message ColleWithStudentResult{

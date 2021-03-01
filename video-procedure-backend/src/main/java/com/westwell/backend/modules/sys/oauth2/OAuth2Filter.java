@@ -52,7 +52,7 @@ public class OAuth2Filter extends AuthenticatingFilter {
             return true;
         }
 //        System.out.println(((HttpServletRequest) request).getServletPath());
-        if (Arrays.stream(goodPath).allMatch( path -> ((HttpServletRequest) request).getServletPath().equals(path) )) {
+        if (Arrays.stream(goodPath).anyMatch( path -> ((HttpServletRequest) request).getServletPath().equals(path) )) {
             return true;
         }
 

@@ -67,13 +67,13 @@ public class ExcelUtil {
             e.printStackTrace();
         }
 
-        String targetPath = "/home/westwell/java/data/class4/pic2";
+        String targetPath = "/home/westwell/java/data/class4/child_need2";
         File targetPathFile = new File(targetPath);
         if (!targetPathFile.exists()){
             targetPathFile.mkdirs();
         }
 
-        String sourcePath = "/home/westwell/java/data/class4/pic";
+        String sourcePath = "/home/westwell/java/data/class4/child_need";
         File sourcePathFile = new File(sourcePath);
         File[] files = sourcePathFile.listFiles();
         for (File file : files) {

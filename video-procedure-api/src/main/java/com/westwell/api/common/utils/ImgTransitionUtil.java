@@ -111,6 +111,10 @@ public class ImgTransitionUtil {
         try {
 //            File w2 = new File("W:\\img\\00000000003.jpg");//可以是jpg,png,gif格式
             File w2 = new File(imagePath);//可以是jpg,png,gif格式
+            if (!w2.exists()){
+                w2.mkdirs();
+            }
+
             ImageIO.write(bi1, "jpg", w2);//不管输出什么格式图片，此处不需改动
         } catch (IOException e) {
             e.printStackTrace();
@@ -133,6 +137,12 @@ public class ImgTransitionUtil {
         byte[] data = d.decodeBuffer(image);
 
         return data;
+    }
+
+    public static void base64ToFile(String image, String path) throws Exception {
+        byte[] bytes = base64ToByte(image);
+        byteToFile(bytes, path);
+
     }
 
     public static String bytesToBase64(byte[] bytes) throws IOException {

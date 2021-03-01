@@ -15,7 +15,7 @@ public class FeatureServiceServer {
 
 
         Server server = ServerBuilder
-                .forPort(8080)
+                .forPort(8087)
                 .addService(new FeatureServiceServer(). new MyFeatureServiceServer()).build();
 
         server.start();
@@ -67,6 +67,25 @@ public class FeatureServiceServer {
 
             responseObserver.onNext(builder.build());
             responseObserver.onCompleted();
+        }
+
+
+        public void contrastCollesWithBaseInfoInRedis(com.westwell.api.ContrastCollesWithBaseInfoRequest request,
+                                                      io.grpc.stub.StreamObserver<com.westwell.api.ContrastCollesWithBaseInfoResponse> responseObserver) {
+
+/*
+
+            ColleWithStudentResult result = ColleWithStudentResult.newBuilder().setStudentNum("1").setPicColle("ded").build();
+            List<> list = new ArrayList<>();
+            list.add(result);
+
+            ContrastCollesWithBaseInfoResponse build1 = ContrastCollesWithBaseInfoResponse.newBuilder().addAllColleWithStudentResults("list").build();
+
+            responseObserver.onNext(build1);
+            responseObserver.onCompleted();
+*/
+
+
         }
 
 

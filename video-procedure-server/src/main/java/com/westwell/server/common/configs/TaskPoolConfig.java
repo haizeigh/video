@@ -22,6 +22,10 @@ public class TaskPoolConfig {
         executor.setKeepAliveSeconds(60);
         //线程名字前缀
         executor.setThreadNamePrefix("video-taskExecutor-");
+//        优雅关机
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setAwaitTerminationSeconds(3);
+
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         return executor;
     }

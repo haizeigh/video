@@ -1,20 +1,26 @@
 package com.westwell.server.service.impl;
 
 import com.westwell.api.common.utils.DateUtils;
+import com.westwell.api.common.utils.ImgTransitionUtil;
 import com.westwell.server.common.configs.DataConfig;
 import com.westwell.server.common.exception.VPException;
 import com.westwell.server.common.utils.FfmpegUtil;
 import com.westwell.server.common.utils.RedisUtils;
+import com.westwell.server.container.IdentifyFacesContainer;
 import com.westwell.server.dto.TaskDetailInfoDto;
 import com.westwell.server.service.VideoMediaService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Future;
 
+@Slf4j
 @Service
 public class VideoMediaServiceImpl implements VideoMediaService {
 
@@ -27,6 +33,9 @@ public class VideoMediaServiceImpl implements VideoMediaService {
 
     @Resource
     VideoAsyncServiceImpl videoAsyncService;
+
+    @Resource
+    IdentifyFacesContainer identifyFacesContainer;
 
     @Override
     public boolean cutVideoToPics(TaskDetailInfoDto task, String picsPath) {
@@ -68,8 +77,8 @@ public class VideoMediaServiceImpl implements VideoMediaService {
         commands.add("-i");
         commands.add(builder.toString());
 
-        commands.add("-s");
-        commands.add(DataConfig.PIXELS);
+//        commands.add("-s");
+//        commands.add(DataConfig.PIXELS);
 
         commands.add("-t");
         long diffSec = (task.getTaskEntity().getVideoEndTime().getTime() - task.getTaskEntity().getVideoStartTime().getTime() ) / 1000 ;
@@ -90,17 +99,17 @@ public class VideoMediaServiceImpl implements VideoMediaService {
         StringBuffer commandsBuffer = new StringBuffer();
         for (int i = 0; i < commands.size(); i++)
             commandsBuffer.append(commands.get(i) + " ");
-        System.out.println("command is : " + commandsBuffer);
+        log.info("command is : " + commandsBuffer);
 
         int exit = 0;
         try {
 
             Process process = FfmpegUtil.cutPics( commandsBuffer.toString());
             if ((exit = process.waitFor()) == 0) {
-                System.out.println("---执行结果：---" + (exit == 0 ? "【成功】" : "【失败】"));
+                log.info("---执行结果：---" + (exit == 0 ? "【成功】" : "【失败】"));
             }
         }catch (Exception e){
-            throw new VPException("", e);
+            throw new VPException("ffmpeg视频工具异常", e);
         }
 
         return exit == 0;
@@ -132,10 +141,66 @@ public class VideoMediaServiceImpl implements VideoMediaService {
     }
 
     @Override
-    public boolean clearPicsInRedis(List<String> picKeyList) {
+    public void readPicsFromRedis(TaskDetailInfoDto task, List<String> faceKeys) throws Exception {
+
+        faceKeys.stream().forEach(faceKey -> {
+
+            String pic = redisUtils.getHash(faceKey, "pic").toString();
+            try {
+                ImgTransitionUtil.base64ToFile(pic, DataConfig.FACE_PIC_CACHE_PATH + "/" + faceKey + ".jpeg");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
+    }
+
+    @Override
+    public boolean clearListInRedis(List<String> picKeyList) {
 
         picKeyList.stream().forEach(key -> redisUtils.delete(key));
         return true;
+    }
+
+    @Override
+    public void readPicCollesFromRedis(TaskDetailInfoDto task) {
+
+        log.info("临时底库的地址" + DataConfig.FACE_PIC_CACHE_PATH );
+        List<String> faceCollection = identifyFacesContainer.faceColleKeys(task);
+        faceCollection.forEach( faceColle -> {
+            List<String> picsFromBucket = identifyFacesContainer.getPicsFromBucket(faceColle);
+            picsFromBucket.forEach(faceKey -> {
+                String pic = redisUtils.getHash(faceKey, "pic").toString();
+                try {
+                    ImgTransitionUtil.base64ToFile(pic, DataConfig.FACE_PIC_CACHE_PATH + "/" + faceColle+"/" + faceKey + ".jpeg");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+
+        });
+
+
+    }
+
+    @Override
+    public void readBasePicsFromRedis(TaskDetailInfoDto task) {
+
+        String base = "wellcare:base";
+        Map<String, Object> hash = redisUtils.getHash(base);
+        hash.forEach( (num,imageKeys ) -> {
+            String[] keys = imageKeys.toString().split(",");
+
+            Arrays.stream(keys).forEach(faceKey -> {
+                String pic = redisUtils.getHash(faceKey, "pic").toString();
+                try {
+//                    ImgTransitionUtil.base64ToFile(pic, DataConfig.FACE_PIC_CACHE_PATH + "/" + base+"/" + faceKey.substring(faceKey.lastIndexOf("/") +1) + ".jpeg");
+                    ImgTransitionUtil.base64ToFile(pic, DataConfig.FACE_PIC_CACHE_PATH + "/" + base+"/" + faceKey.substring(faceKey.lastIndexOf("/") +1) );
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        });
     }
 
 }

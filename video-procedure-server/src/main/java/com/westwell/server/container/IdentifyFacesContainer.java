@@ -1,6 +1,6 @@
 package com.westwell.server.container;
 
-import com.westwell.server.common.configs.DataConfig;
+import com.google.common.base.Strings;
 import com.westwell.server.common.utils.RedisUtils;
 import com.westwell.server.dto.TaskDetailInfoDto;
 import com.westwell.server.event.FaceCollectionChangeEvent;
@@ -10,10 +10,10 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -21,11 +21,7 @@ import java.util.stream.Collectors;
 @Data
 public class IdentifyFacesContainer {
 
-    private   Map<String, String> identifyMap = new ConcurrentHashMap<>( DataConfig.CLUSTER_NUM * 2 );
-    private  List<String> faceCollection= new CopyOnWriteArrayList<>();
-    private  AtomicInteger clusterCount = new AtomicInteger(0);
-    //    全部的帧
-    private  List<String> allFrame = new LinkedList<>();
+    private  Map<String, VideoContainer> identifyMap = new ConcurrentHashMap<>( 32 );
 
     @Resource
     private  ApplicationContext applicationContext;
@@ -33,80 +29,112 @@ public class IdentifyFacesContainer {
     @Resource
     private RedisUtils redisUtils;
 
-/*
-    public IdentifyFacesContainer(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
-    }
-
-*/
-
-    public void init(){
-        identifyMap = new ConcurrentHashMap<>( DataConfig.CLUSTER_NUM * 2 );
-        faceCollection= new CopyOnWriteArrayList<>();
-        clusterCount = new AtomicInteger(0);
-        allFrame = new LinkedList<>();
+    public void initContainer(){
+        identifyMap = new ConcurrentHashMap<>( 32 );
     }
 
 
-    public  void addPicToExistBucket(String faceKey, String faceColleKey){
+    public boolean addPicToExistBucket(String faceKey, String faceColleKey, TaskDetailInfoDto task){
 
         redisUtils.lPush(faceColleKey, faceKey);
-        FaceCollectionChangeEvent change = new FaceCollectionChangeEvent("change", faceColleKey);
+        FaceCollectionChangeEvent change = new FaceCollectionChangeEvent(task, faceColleKey);
         applicationContext.publishEvent(change);
+        return true;
     }
 
     public  boolean addPicToNewBucket(String faceKey, TaskDetailInfoDto task) {
 
-        if (clusterCount.get() > DataConfig.CLUSTER_NUM) {
-            log.warn("clusterCount={} 超出限制{}", clusterCount, DataConfig.CLUSTER_NUM);
+        String taskCameraPrefix = task.getTaskCameraPrefix();
+        if (!identifyMap.containsKey(taskCameraPrefix)){
+            identifyMap.put(taskCameraPrefix, new VideoContainer());
+        }
+//        获取容器
+        VideoContainer videoContainer = identifyMap.get(taskCameraPrefix);
+
+        String faceColleKey = videoContainer.newBucketName(task);
+        if (Strings.isNullOrEmpty(faceColleKey)){
+            log.warn("摄像任务{}不能创建新底库", taskCameraPrefix);
             return false;
         }
 
-        StringBuilder stringBuilder = new StringBuilder();
-        String faceColleKey = stringBuilder.append(DataConfig.TASK_PREFIX)
-                .append(":")
-                .append(task.getTaskEntity().getTaskNo())
-                .append(":set:")
-                .append(clusterCount.incrementAndGet()).toString();
-
-        faceCollection.add(faceColleKey);
-        addPicToExistBucket(faceKey, faceColleKey);
-
-        return true;
+        videoContainer.getFaceCollection().add(faceColleKey);
+        return addPicToExistBucket( faceKey, faceColleKey, task);
     }
 
     public  List<String> getPicsFromBucket(String faceColleKey){
-        return redisUtils.lGetAll(faceColleKey).stream().map( v -> v.toString()).collect(Collectors.toList());
+        return redisUtils.lGetAll(faceColleKey).stream().map(Object::toString).collect(Collectors.toList());
     }
 
 //    查找身份
-    public  String getIdentify(String colleKey){
-        return identifyMap.get(colleKey);
+    public  String getIdentify(String colleKey, TaskDetailInfoDto task){
+
+        VideoContainer videoContainer = identifyMap.get(task.getTaskCameraPrefix());
+        return videoContainer.getIdentifyMap().get(colleKey);
     }
 
 //    写入确定的身份
-    public  void addIdentify(String colleKey, String studentId){
-        identifyMap.put(colleKey, studentId);
+    public  void addIdentify(String colleKey, String studentId, TaskDetailInfoDto task){
+        VideoContainer videoContainer = identifyMap.get(task.getTaskCameraPrefix());
+        videoContainer.getIdentifyMap().put(colleKey, studentId);
     }
 
-    public  List<String> faceColleKeys() {
-        return faceCollection;
+    public  List<String> faceColleKeys(TaskDetailInfoDto task) {
+        VideoContainer videoContainer = identifyMap.get(task.getTaskCameraPrefix());
+        return videoContainer.getFaceCollection();
     }
 
-    public  boolean containsKey(String faceColleKey) {
-        return faceCollection.indexOf(faceColleKey) > 0;
+    public  boolean containsKey(String faceColleKey, TaskDetailInfoDto task) {
+        VideoContainer videoContainer = identifyMap.get(task.getTaskCameraPrefix());
+        return videoContainer.getFaceCollection().indexOf(faceColleKey) > 0;
     }
 
 //    查找所有排序的帧
-    public  List<String> getSortedFaceKeys(){
+    public  List<String> getSortedFaceKeys(TaskDetailInfoDto task){
 
-        Collections.sort(allFrame);
-        return allFrame;
+        VideoContainer videoContainer = identifyMap.get(task.getTaskCameraPrefix());
+        List<String> faces = videoContainer.getAllFrame();
+        Collections.sort(faces);
+        return faces;
     }
 
-    public  void addFrameFaceKeys(List<String> faceKeys){
-        allFrame.addAll(faceKeys);
+    public  void addFrameFaceKeys(List<String> faceKeys, TaskDetailInfoDto task){
+
+//        initBucket(faceKeys, task);
+        String taskCameraPrefix = task.getTaskCameraPrefix();
+        if (!identifyMap.containsKey(task.getTaskCameraPrefix())){
+            identifyMap.put(taskCameraPrefix, new VideoContainer());
+        }
+        VideoContainer videoContainer = identifyMap.get(task.getTaskCameraPrefix());
+        videoContainer.getAllFrame().addAll(faceKeys);
     }
+
+
+
+    public void initBucket(List<String> faceKeys, TaskDetailInfoDto task) {
+
+
+        String taskCameraPrefix = task.getTaskCameraPrefix();
+        if (!identifyMap.containsKey(taskCameraPrefix) || identifyMap.get(taskCameraPrefix).getFaceCollection().size() == 0 ){
+            synchronized (this){
+                log.info("初始化容器");
+                if (!identifyMap.containsKey(taskCameraPrefix) || identifyMap.get(taskCameraPrefix).getFaceCollection().size() == 0 ){
+                    addPicToNewBucket(faceKeys.get(0), task);
+      /*
+                    List<String> newFaceKeys = new ArrayList<>();
+                    for (int i = 1; i < faceKeys.size(); i++) {
+                        newFaceKeys.add(faceKeys.get(i));
+                    }
+                    faceKeys = newFaceKeys;*/
+                }
+            }
+        }
+    }
+
+    public Map<String, String> getVideoIdentifyMap(TaskDetailInfoDto task) {
+
+        return identifyMap.get(task.getTaskCameraPrefix()).getIdentifyMap();
+    }
+
 
 
   /*  public static void main(String[] args) {

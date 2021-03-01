@@ -1,6 +1,7 @@
 package com.westwell.server.service.impl;
 
 import com.westwell.api.common.utils.ImgTransitionUtil;
+import com.westwell.server.common.configs.DataConfig;
 import com.westwell.server.common.utils.RedisUtils;
 import com.westwell.server.dto.TaskDetailInfoDto;
 import org.springframework.scheduling.annotation.Async;
@@ -28,7 +29,7 @@ public class VideoAsyncServiceImpl {
         redisUtils.set(picKey, fileToBase64);
 
         long end = System.currentTimeMillis();
-        System.out.println(Thread.currentThread().getName() + " 耗时 ：" + (end - start) );
+//        System.out.println(Thread.currentThread().getName() + " 耗时 ：" + (end - start) );
         return new AsyncResult<String>(picKey);
     }
 
@@ -44,7 +45,9 @@ public class VideoAsyncServiceImpl {
 
 //        wellcare:任务编号:camera_编号:时间戳:帧编号
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(" wellcare:")
+        stringBuilder
+                .append(DataConfig.TASK_PREFIX)
+                .append(":")
                 .append(task.getTaskEntity().getTaskNo())
                 .append(":")
                 .append(task.getCameraInfoEntity().getCameraNo())

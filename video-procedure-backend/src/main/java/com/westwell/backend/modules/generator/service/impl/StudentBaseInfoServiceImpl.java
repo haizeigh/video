@@ -1,6 +1,5 @@
 package com.westwell.backend.modules.generator.service.impl;
 
-import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -22,7 +21,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service("studentBaseInfoService")
@@ -75,15 +77,21 @@ public class StudentBaseInfoServiceImpl extends ServiceImpl<StudentBaseInfoDao, 
             studentNameMap.put(num,name);
         }
 
+//        清理底库
+        log.info("清理底库数据");
+        redisUtils.delete(SMARTK_BASE);
+
         studentPicMap.forEach( (num, paths) -> {
             StudentBaseInfoEntity studentBaseInfo = new StudentBaseInfoEntity();
             studentBaseInfo.setStudentNum(num);
             studentBaseInfo.setStudentName(studentNameMap.get(num));
 
-            studentBaseInfo.setPicsUrl(JSON.toJSONString(paths));
+            studentBaseInfo.setPicsUrl(getPathString(paths));
+
             studentBaseInfo.setCreatTime(new Date());
             try {
-                saveInfo(studentBaseInfo);
+                save(studentBaseInfo);
+                saveStudentPic(studentBaseInfo);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -93,9 +101,18 @@ public class StudentBaseInfoServiceImpl extends ServiceImpl<StudentBaseInfoDao, 
         log.info("通知更新全部学生底库数据");
         StudentPicUpdateResponse studentPicUpdateResponse = featureServiceBlockingStub.studentsAllUpdate(null);
         if ( !studentPicUpdateResponse.getSuccess().equals("success")){
+            redisUtils.delete(SMARTK_BASE);
             throw new VPBException("通知特征服务更新异常");
         }
 
+    }
+
+    private String getPathString(List<String> paths) {
+        StringBuilder allThisPath = new StringBuilder("");
+        for (String thisPath : paths) {
+            allThisPath.append(",").append(thisPath);
+        }
+        return allThisPath.substring(1);
     }
 
     @Override
@@ -104,26 +121,39 @@ public class StudentBaseInfoServiceImpl extends ServiceImpl<StudentBaseInfoDao, 
         String filePathsString = studentBaseInfo.getPicsUrl();
 
 //        一个学生多张图
-        List<String> filePaths = JSON.parseArray(filePathsString, String.class);
-        List<String> filePathList = new ArrayList<String>();
+//        List<String> filePaths = JSON.parseArray(filePathsString, String.class);
+//        List<String> filePaths = new ArrayList<>();
+//        filePaths.add(filePathsString);
+        String[] filePaths = filePathsString.split(",");
+
+        List<String> imageKeyList = new ArrayList<String>();
 
         for (String filePath : filePaths) {
             File file = new File(filePath);
             //保存原图到reids, filePath 作为key
             String imageString = ImgTransitionUtil.imageFileToBase64(file);
             log.info("原图到redis");
-            redisUtils.set(filePath, imageString);
-            filePathList.add(filePath);
+            String filePrefix = filePath.substring(0, filePath.lastIndexOf("/"));
+            String fileName = filePath.substring(filePath.lastIndexOf("/"));
+            String[] split = fileName.split("_");
+
+            String name = filePrefix + "_" + split[0] + "_" + split[2];
+            imageKeyList.add(name);
+            redisUtils.set(name, imageString);
+//            filePathList.add(filePath);
+//            每张图片检测 自取最大面积的小图
+            List<String> childFaceList = new ArrayList<String>();
+            childFaceList.add(name);
 
         }
 
         PicsInRedisRequest.Builder picBuilder = PicsInRedisRequest.newBuilder();
-        picBuilder.addAllPickeysReq(filePathList);
+        picBuilder.addAllPickeysReq(imageKeyList);
         DetectPicsInRedisResponse detectPicsInRedisResponse = detectionServiceBlockingStub.detectPicsInRedis(picBuilder.build());
         ProtocolStringList picKeysList = detectPicsInRedisResponse.getPickeysResList();
 
         log.info("清理原图 redis");
-        filePaths.stream().forEach(filePath -> redisUtils.delete(filePath));
+        imageKeyList.stream().forEach(filePath -> redisUtils.delete(filePath));
 
         if (CollectionUtils.isEmpty(picKeysList)) {
             //图片有问题  下一个
@@ -138,7 +168,7 @@ public class StudentBaseInfoServiceImpl extends ServiceImpl<StudentBaseInfoDao, 
 //             if (extractFeatureInRedisResponse.getSuccess().equals();)
 //            保存到redis
         log.info("抽取保存小图redis ");
-        redisUtils.putHash(SMARTK_BASE, studentBaseInfo.getId().toString(), picKeysList.toString());
+        redisUtils.putHash(SMARTK_BASE, studentBaseInfo.getId().toString(), getPathString(picKeysList));
         return true;
     }
 

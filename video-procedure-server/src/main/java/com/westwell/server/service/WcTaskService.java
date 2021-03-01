@@ -3,6 +3,8 @@ package com.westwell.server.service;
 import com.westwell.server.dto.TaskDetailInfoDto;
 import com.westwell.server.entity.WcTaskEntity;
 
+import java.util.Date;
+
 /**
  * 任务记录表
  *
@@ -16,6 +18,8 @@ public interface WcTaskService {
 
 //    创建任务
     TaskDetailInfoDto getOneTaskDetailInfoDto();
+
+    TaskDetailInfoDto getOneTaskDetailInfoDto(Integer cameraNo, Date videoStartTime, Date videoEndTime);
 
     void update(WcTaskEntity taskEntity);
 }

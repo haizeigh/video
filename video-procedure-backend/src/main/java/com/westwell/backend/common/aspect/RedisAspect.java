@@ -11,19 +11,17 @@ package com.westwell.backend.common.aspect;
 import com.westwell.backend.common.exception.RRException;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
-import org.aspectj.lang.annotation.Aspect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
 
 /**
  * Redis切面处理类
  *
  * @author Mark sunlightcs@gmail.com
  */
-@Aspect
-@Configuration
+//@Aspect
+//@Configuration
 public class RedisAspect {
     private Logger logger = LoggerFactory.getLogger(getClass());
     //是否开启redis缓存  true开启   false关闭

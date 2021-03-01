@@ -12,7 +12,7 @@ public class DeteServiceServer {
 
 
         Server server = ServerBuilder
-                .forPort(8081)
+                .forPort(8082)
                 .addService(new DeteServiceServer(). new MyFeatureServiceServer()).build();
 
         server.start();

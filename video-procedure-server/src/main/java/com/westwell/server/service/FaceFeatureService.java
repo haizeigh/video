@@ -1,6 +1,7 @@
 package com.westwell.server.service;
 
 import com.westwell.server.dto.CompareSimilarityDto;
+import com.westwell.server.dto.TaskDetailInfoDto;
 
 import java.util.List;
 import java.util.Map;
@@ -12,7 +13,7 @@ public interface FaceFeatureService {
     boolean extractFaceFeature(List<String> picKeys);
 
 //    rpc通知1:N人脸对比服务
-    CompareSimilarityDto compareFaceWithCollection(String faceKey) throws Exception;
+    CompareSimilarityDto compareFaceWithCollection(TaskDetailInfoDto task, String faceKey) throws Exception;
 
 //    rpc通知N:M人脸对比服务
     Map<String, String> compareCollectionWithStudent(List<String> faceColles);
