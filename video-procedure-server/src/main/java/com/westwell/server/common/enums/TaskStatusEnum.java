@@ -5,7 +5,8 @@ public enum TaskStatusEnum {
 
     DOING("doing", "处理中"),
     FAIL("fail", "失败"),
-    SUCCESS("success", "成功");
+    SUCCESS("success", "成功"),
+    PART("part", "部分成功");
 
     private String code;
 

@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Component
 @Data
-public class IdentifyFacesContainer {
+public class IdentifyContainer {
 
     private  Map<String, VideoContainer> identifyMap = new ConcurrentHashMap<>( 32 );
 
@@ -34,15 +34,15 @@ public class IdentifyFacesContainer {
     }
 
 
-    public boolean addPicToExistBucket(String faceKey, String faceColleKey, TaskDetailInfoDto task){
+    public boolean addPicToExistBucket(String picKey, String picColleKey, TaskDetailInfoDto task){
 
-        redisUtils.lPush(faceColleKey, faceKey);
-        FaceCollectionChangeEvent change = new FaceCollectionChangeEvent(task, faceColleKey);
+        redisUtils.lPush(picColleKey, picKey);
+        FaceCollectionChangeEvent change = new FaceCollectionChangeEvent(task, picColleKey);
         applicationContext.publishEvent(change);
         return true;
     }
 
-    public  boolean addPicToNewBucket(String faceKey, TaskDetailInfoDto task) {
+    public  boolean addPicToNewBucket(String picKey, TaskDetailInfoDto task) {
 
         String taskCameraPrefix = task.getTaskCameraPrefix();
         if (!identifyMap.containsKey(taskCameraPrefix)){
@@ -51,14 +51,14 @@ public class IdentifyFacesContainer {
 //        获取容器
         VideoContainer videoContainer = identifyMap.get(taskCameraPrefix);
 
-        String faceColleKey = videoContainer.newBucketName(task);
-        if (Strings.isNullOrEmpty(faceColleKey)){
+        String picColleKey = videoContainer.newBucketName(task);
+        if (Strings.isNullOrEmpty(picColleKey)){
             log.warn("摄像任务{}不能创建新底库", taskCameraPrefix);
             return false;
         }
 
-        videoContainer.getFaceCollection().add(faceColleKey);
-        return addPicToExistBucket( faceKey, faceColleKey, task);
+        videoContainer.getPicCollection().add(picColleKey);
+        return addPicToExistBucket( picKey, picColleKey, task);
     }
 
     public  List<String> getPicsFromBucket(String faceColleKey){
@@ -80,12 +80,12 @@ public class IdentifyFacesContainer {
 
     public  List<String> faceColleKeys(TaskDetailInfoDto task) {
         VideoContainer videoContainer = identifyMap.get(task.getTaskCameraPrefix());
-        return videoContainer.getFaceCollection();
+        return videoContainer.getPicCollection();
     }
 
     public  boolean containsKey(String faceColleKey, TaskDetailInfoDto task) {
         VideoContainer videoContainer = identifyMap.get(task.getTaskCameraPrefix());
-        return videoContainer.getFaceCollection().indexOf(faceColleKey) > 0;
+        return videoContainer.getPicCollection().indexOf(faceColleKey) > 0;
     }
 
 //    查找所有排序的帧
@@ -97,28 +97,31 @@ public class IdentifyFacesContainer {
         return faces;
     }
 
-    public  void addFrameFaceKeys(List<String> faceKeys, TaskDetailInfoDto task){
+    public  void addPicFrameKeys(List<String> picKeys, TaskDetailInfoDto task){
 
-//        initBucket(faceKeys, task);
         String taskCameraPrefix = task.getTaskCameraPrefix();
         if (!identifyMap.containsKey(task.getTaskCameraPrefix())){
-            identifyMap.put(taskCameraPrefix, new VideoContainer());
+            synchronized (this){
+                if (!identifyMap.containsKey(task.getTaskCameraPrefix())){
+                    identifyMap.put(taskCameraPrefix, new VideoContainer());
+                }
+            }
         }
         VideoContainer videoContainer = identifyMap.get(task.getTaskCameraPrefix());
-        videoContainer.getAllFrame().addAll(faceKeys);
+        videoContainer.getAllFrame().addAll(picKeys);
     }
 
 
 
-    public void initBucket(List<String> faceKeys, TaskDetailInfoDto task) {
+    public void initBucket(List<String> picKeys, TaskDetailInfoDto task) {
 
 
         String taskCameraPrefix = task.getTaskCameraPrefix();
-        if (!identifyMap.containsKey(taskCameraPrefix) || identifyMap.get(taskCameraPrefix).getFaceCollection().size() == 0 ){
+        if (!identifyMap.containsKey(taskCameraPrefix) || identifyMap.get(taskCameraPrefix).getPicCollection().size() == 0 ){
             synchronized (this){
                 log.info("初始化容器");
-                if (!identifyMap.containsKey(taskCameraPrefix) || identifyMap.get(taskCameraPrefix).getFaceCollection().size() == 0 ){
-                    addPicToNewBucket(faceKeys.get(0), task);
+                if (!identifyMap.containsKey(taskCameraPrefix) || identifyMap.get(taskCameraPrefix).getPicCollection().size() == 0 ){
+                    addPicToNewBucket(picKeys.get(0), task);
       /*
                     List<String> newFaceKeys = new ArrayList<>();
                     for (int i = 1; i < faceKeys.size(); i++) {

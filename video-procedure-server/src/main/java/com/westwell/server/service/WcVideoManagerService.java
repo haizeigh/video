@@ -14,6 +14,6 @@ import java.util.concurrent.Future;
 public interface WcVideoManagerService {
 
 
-    Future<RouterCameraResultDto> routerGap(Integer cameraNo);
+    Future<RouterCameraResultDto> routerGap(Integer cameraNo, Integer taskNo);
 }
 

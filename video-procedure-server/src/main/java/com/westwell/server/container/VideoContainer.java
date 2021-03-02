@@ -1,7 +1,6 @@
 package com.westwell.server.container;
 
 import com.westwell.server.common.configs.DataConfig;
-import com.westwell.server.common.utils.RedisUtils;
 import com.westwell.server.dto.TaskDetailInfoDto;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +22,7 @@ public class VideoContainer {
 //    身份信息
     private Map<String, String> identifyMap = new ConcurrentHashMap<>(DataConfig.CLUSTER_NUM * 2);
 //    底酷
-    private List<String> faceCollection = new CopyOnWriteArrayList<>();
+    private List<String> picCollection = new CopyOnWriteArrayList<>();
 //    堆栈限制计数
     private AtomicInteger clusterCount = new AtomicInteger(0);
     //    全部的帧
@@ -32,8 +31,6 @@ public class VideoContainer {
     @Resource
     private ApplicationContext applicationContext;
 
-    @Resource
-    private RedisUtils redisUtils;
 
     public String newBucketName(TaskDetailInfoDto task){
         if (!hasNewBucket(task)){

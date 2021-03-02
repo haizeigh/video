@@ -7,6 +7,7 @@ import java.util.concurrent.Future;
 
 public interface VideoProcessService {
 
-    Future<TaskDetailInfoDto> detectVideo(Integer cameraNo, Date videoStartTime, Date videoEndTime) ;
+    Future<TaskDetailInfoDto> detectVideo(Integer taskNo, Integer cameraNo, Date videoStartTime, Date videoEndTime) ;
 
+    void clearVideoCache(TaskDetailInfoDto task);
 }

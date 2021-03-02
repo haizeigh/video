@@ -7,10 +7,7 @@ import com.westwell.server.common.exception.VPException;
 import com.westwell.server.common.utils.DateSplitUtils;
 import com.westwell.server.dto.RouterCameraResultDto;
 import com.westwell.server.dto.TaskDetailInfoDto;
-import com.westwell.server.service.FaceIdentifyService;
-import com.westwell.server.service.ResultDumpService;
-import com.westwell.server.service.VideoProcessService;
-import com.westwell.server.service.WcVideoManagerService;
+import com.westwell.server.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.AsyncResult;
@@ -33,11 +30,14 @@ public class WcVideoManagerServiceImpl implements WcVideoManagerService {
     ResultDumpService resultDumpService;
 
     @Resource
-    FaceIdentifyService faceIdentifyService;
+    IdentifyService identifyService;
+
+    @Resource
+    VideoMediaService videoMediaService;
 
     @Override
     @Async("taskExecutor")
-    public Future<RouterCameraResultDto> routerGap(Integer cameraNo) {
+    public Future<RouterCameraResultDto> routerGap(Integer cameraNo, Integer taskNo) {
 
         Date firstTime = DateUtils.stringToDate(DataConfig.VIDEO_START_TIME);
         Date endTime = DateUtils.stringToDate(DataConfig.VIDEO_END_TIME);
@@ -50,7 +50,7 @@ public class WcVideoManagerServiceImpl implements WcVideoManagerService {
         for (DateSplitUtils.DateSplit dateSplit : dateSplits) {
             log.info("{}摄像，任务时间{}-{}开始", cameraNo, dateSplit.getStartDateTimeStr(), dateSplit.getEndDateTimeStr());
             Future<TaskDetailInfoDto> taskDetailInfoDtoFuture
-                    = videoProcessService.detectVideo(cameraNo, dateSplit.getStartDateTime(), dateSplit.getEndDateTime());
+                    = videoProcessService.detectVideo(taskNo, cameraNo, dateSplit.getStartDateTime(), dateSplit.getEndDateTime());
             list.add(taskDetailInfoDtoFuture);
 
         }
@@ -75,6 +75,11 @@ public class WcVideoManagerServiceImpl implements WcVideoManagerService {
             }
 
             try {
+                log.info("输出临时底库无标签的图片");
+                videoMediaService.readPicCollesFromRedis(task);
+
+                log.info("输出临时底库有标签的图片");
+                videoMediaService.readfacesCollesFromRedis(task);
 
                 String textPath = task.getTaskPath() + "/identify";
                 resultDumpService.dumpFrameResult(task, textPath);
@@ -87,7 +92,7 @@ public class WcVideoManagerServiceImpl implements WcVideoManagerService {
                 long end = System.currentTimeMillis();
                 System.out.println("总耗时 ：" + (end - start));
                 log.info("清理临时数据");
-                faceIdentifyService.clearVideoCache(task);
+                videoProcessService.clearVideoCache(task);
             }
         }
 

@@ -12,62 +12,39 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 任务记录表
+ * 作业管理记录表
  *
  * @author chenshun
  * @email sunlightcs@gmail.com
- * @date 2021-02-18 14:46:17
+ * @date 2021-03-02 17:05:19
  */
+
 @Data
-@Table(name = "wc_task")
+@Table(name = "wc_task_manager")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class WcTaskEntity implements Serializable {
+public class WcTaskManagerEntity implements Serializable {
 	private static final long serialVersionUID = 1L;
 
+	/**
+	 *
+	 */
 	@Id
 	@GeneratedValue(generator = "JDBC")
 	private Integer id;
-
 	/**
-	 * 任务标识
+	 * 作业的开始时间
 	 */
-	private Integer taskNo;
+	private Date startTime;
 	/**
-	 * 摄像头编号
-
-
+	 * 作业的结束时间
 	 */
-	private Integer cameraNo;
-	/**
-	 * 视频的开始时间
-
-
-	 */
-	private Date videoStartTime;
-	/**
-	 * 视频的结束时间
-	 */
-	private Date videoEndTime;
-	/**
-	 * 每秒的帧数
-	 */
-	private Integer frame;
-	/**
-	 * 任务的开始时间
-	 */
-	private Date taskStartTime;
-	/**
-	 * 任务的结束时间
-	 */
-	private Date taskEndTime;
+	private Date endTime;
 	/**
 	 * 任务状态
-
-
 	 */
-	private String taskStatus;
+	private String status;
 	/**
 	 * 任务备注
 	 */

@@ -19,7 +19,7 @@ public interface WcTaskService {
 //    创建任务
     TaskDetailInfoDto getOneTaskDetailInfoDto();
 
-    TaskDetailInfoDto getOneTaskDetailInfoDto(Integer cameraNo, Date videoStartTime, Date videoEndTime);
+    TaskDetailInfoDto getOneTaskDetailInfoDto(Integer taskNo, Integer cameraNo, Date videoStartTime, Date videoEndTime);
 
     void update(WcTaskEntity taskEntity);
 }

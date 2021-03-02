@@ -56,9 +56,10 @@ public class WcTaskServiceImpl implements WcTaskService {
     }
 
     @Override
-    public TaskDetailInfoDto getOneTaskDetailInfoDto(Integer cameraNo, Date videoStartTime, Date videoEndTime) {
+    public TaskDetailInfoDto getOneTaskDetailInfoDto(Integer taskNo, Integer cameraNo, Date videoStartTime, Date videoEndTime) {
 
         WcTaskEntity taskEntity = WcTaskEntity.builder()
+                .taskNo(taskNo)
                 .cameraNo(cameraNo)
                 .taskStatus(TaskStatusEnum.DOING.getCode())
                 .taskStartTime(new Date())

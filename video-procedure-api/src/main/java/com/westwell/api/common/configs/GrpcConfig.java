@@ -2,6 +2,7 @@ package com.westwell.api.common.configs;
 
 import com.westwell.api.DetectionServiceGrpc;
 import com.westwell.api.FeatureServiceGrpc;
+import com.westwell.api.wellcare.body.BodyFeatureServiceGrpc;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -55,6 +56,15 @@ public class GrpcConfig {
         return channel;
     }
 
+    @Bean("bodyFeature")
+    public ManagedChannel bodyFeatureChannel(@Qualifier("grpcTaskExecutor") Executor executor){
+//        ManagedChannel channel = ManagedChannelBuilder.forAddress("10.66.66.20", 50050)
+        ManagedChannel channel = ManagedChannelBuilder.forAddress("10.66.65.200", 50050)
+                .usePlaintext(true)
+                .executor(executor)
+                .build();
+        return channel;
+    }
 
     @Bean
     public FeatureServiceGrpc.FeatureServiceBlockingStub featureServiceBlockingStub(@Qualifier("feature") ManagedChannel managedChannel){
@@ -65,5 +75,10 @@ public class GrpcConfig {
     @Bean
     public DetectionServiceGrpc.DetectionServiceBlockingStub detectionServiceBlockingStub(@Qualifier("detect") ManagedChannel managedChannel){
         return DetectionServiceGrpc.newBlockingStub(managedChannel);
+    }
+
+    @Bean
+    public BodyFeatureServiceGrpc.BodyFeatureServiceBlockingStub bodyFeatureServiceBlockingStub(@Qualifier("bodyFeature") ManagedChannel managedChannel){
+        return BodyFeatureServiceGrpc.newBlockingStub(managedChannel);
     }
 }

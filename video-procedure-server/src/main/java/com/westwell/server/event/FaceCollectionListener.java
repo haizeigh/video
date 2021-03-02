@@ -3,9 +3,9 @@ package com.westwell.server.event;
 import com.google.common.base.Strings;
 import com.westwell.server.common.configs.DataConfig;
 import com.westwell.server.common.utils.RedisUtils;
-import com.westwell.server.container.IdentifyFacesContainer;
+import com.westwell.server.container.IdentifyContainer;
 import com.westwell.server.dto.TaskDetailInfoDto;
-import com.westwell.server.service.FaceFeatureService;
+import com.westwell.server.service.FeatureService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -18,13 +18,13 @@ import java.util.List;
 public class FaceCollectionListener {
 
     @Resource
-    FaceFeatureService faceFeatureService;
+    FeatureService featureService;
 
     @Resource
     RedisUtils redisUtils;
 
     @Resource
-    IdentifyFacesContainer identifyFacesContainer;
+    IdentifyContainer identifyContainer;
 
     @EventListener
     public void listener(FaceCollectionChangeEvent event)
@@ -32,21 +32,24 @@ public class FaceCollectionListener {
         String colleKey = event.getColleKey();
         TaskDetailInfoDto task = (TaskDetailInfoDto)event.getSource();
         log.info("colleKey={} Collection change", colleKey);
-        if (!Strings.isNullOrEmpty(identifyFacesContainer.getIdentify(colleKey, task))){
+        if (!Strings.isNullOrEmpty(identifyContainer.getIdentify(colleKey, task))){
             log.info("has identify, ignore it ");
         }
 
-        List<String> colleValue = identifyFacesContainer.getPicsFromBucket(colleKey);
-        if (colleValue.size() % DataConfig.INTER_FRE == 0) {
+        List<String> colleValue = identifyContainer.getPicsFromBucket(colleKey);
+        if (colleValue.size() % DataConfig.INTER_FRE == 0 &&  task.getTaskType() == TaskDetailInfoDto.TaskType.FACE) {
             log.info("compare face Collection");
-            String studentId = faceFeatureService.compareCollectionWithStudent(colleKey);
+            String studentId = featureService.compareCollectionWithStudent(colleKey);
             if (Strings.isNullOrEmpty(studentId)){
                 return;
             }
-            identifyFacesContainer.addIdentify(colleKey, studentId, task);
+            identifyContainer.addIdentify(colleKey, studentId, task);
 
             colleValue.stream().forEach(faceKey -> redisUtils.putHash(faceKey, DataConfig.STUDENT_ID, studentId));
 
+        }else if (  task.getTaskType() == TaskDetailInfoDto.TaskType.BODY ){
+            log.info("no need compare body Collection");
+            //todo 新的body加入  判断是否具有face关系 然后标记
         }
 
     }

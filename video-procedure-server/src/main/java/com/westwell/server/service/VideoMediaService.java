@@ -12,7 +12,7 @@ public interface VideoMediaService {
     //    把图片保存到redis
     List<String> writePicsToRedis(TaskDetailInfoDto task) throws Exception;
 
-    void readPicsFromRedis(TaskDetailInfoDto task, List<String> faceKeys) throws Exception;
+    void readPicsFromRedis(TaskDetailInfoDto task, List<String> faceKeys, String path) throws Exception;
 
     boolean clearListInRedis(List<String> picKeyList);
 

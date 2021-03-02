@@ -3,11 +3,12 @@ package com.westwell.server.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.google.protobuf.ProtocolStringList;
 import com.westwell.api.*;
+import com.westwell.api.wellcare.body.BodyFeatureServiceGrpc;
 import com.westwell.server.common.configs.DataConfig;
-import com.westwell.server.container.IdentifyFacesContainer;
+import com.westwell.server.container.IdentifyContainer;
 import com.westwell.server.dto.CompareSimilarityDto;
 import com.westwell.server.dto.TaskDetailInfoDto;
-import com.westwell.server.service.FaceFeatureService;
+import com.westwell.server.service.FeatureService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.map.HashedMap;
@@ -19,28 +20,43 @@ import java.util.*;
 
 @Slf4j
 @Service
-public class FaceFeatureServiceImpl implements FaceFeatureService {
+public class FeatureServiceImpl implements FeatureService {
 
     @Resource
     FeatureServiceGrpc.FeatureServiceBlockingStub featureServiceBlockingStub;
 
     @Resource
-    IdentifyFacesContainer identifyFacesContainer;
+    BodyFeatureServiceGrpc.BodyFeatureServiceBlockingStub bodyFeatureServiceBlockingStub;
+
+
+    @Resource
+    IdentifyContainer identifyContainer;
 
     @Override
     public boolean extractFaceFeature(List<String> picKeys) {
 
-        log.info("提取特征的图片数目{}", picKeys.size());
+        log.info("提取face特征的图片数目{}", picKeys.size());
         FacePicsInRedisRequest facePicsInRedisRequest = FacePicsInRedisRequest.newBuilder().addAllPicKeys(picKeys).build();
         ExtractFeatureInRedisResponse extractFeatureInRedisResponse = featureServiceBlockingStub.extractFeatureInRedis(facePicsInRedisRequest);
         return extractFeatureInRedisResponse.getSuccess().equals(DataConfig.SUCCESS);
-//        return true;
+    }
+
+    @Override
+    public boolean extractBodyFeature(List<String> picKeys) {
+        log.info("提取body特征的图片数目{}", picKeys.size());
+
+        com.westwell.api.wellcare.body.FacePicsInRedisRequest.Builder builder = com.westwell.api.wellcare.body.FacePicsInRedisRequest.newBuilder();
+        builder.addAllPicKeys(picKeys);
+
+        com.westwell.api.wellcare.body.ExtractFeatureInRedisResponse extractFeatureInRedisResponse = bodyFeatureServiceBlockingStub.extractBodyFeatureInRedis(builder.build());
+        return extractFeatureInRedisResponse.getSuccess().equals(DataConfig.SUCCESS);
+
     }
 
     @Override
     public CompareSimilarityDto compareFaceWithCollection(TaskDetailInfoDto task, String faceKey) throws Exception {
 
-        List<String> picCollesList = identifyFacesContainer.faceColleKeys(task);
+        List<String> picCollesList = identifyContainer.faceColleKeys(task);
         ContrastPicWithCollesRequest build = ContrastPicWithCollesRequest.newBuilder()
                 .setPicKey(faceKey)
                 .addAllPicColles(picCollesList)
@@ -51,6 +67,63 @@ public class FaceFeatureServiceImpl implements FaceFeatureService {
         List<Double> similarityListForQuery = contrastPicWithCollesResponse.getSimilarityOrderedListList();
         log.info("特征比对{}， 集合{}, 结果{}", faceKey, picCollesList, similarityListForQuery);
 
+        return compareSimilarity(picCollesList, similarityListForQuery);
+    }
+
+
+    @Override
+    public CompareSimilarityDto compareBodyWithCollection(TaskDetailInfoDto task, String bodyKey) throws Exception {
+
+        List<String> picCollesList = identifyContainer.faceColleKeys(task);
+        com.westwell.api.wellcare.body.ContrastPicWithCollesRequest build = com.westwell.api.wellcare.body.ContrastPicWithCollesRequest.newBuilder()
+                .setPicKey(bodyKey)
+                .addAllPicColles(picCollesList)
+                .build();
+//        log.info("特征比对{}， 集合{}", faceKey, picCollesList);
+
+        com.westwell.api.wellcare.body.ContrastPicWithCollesResponse contrastPicWithCollesResponse = bodyFeatureServiceBlockingStub.comparePicBodyWithCollesInRedis(build);
+        List<Double> similarityListForQuery = contrastPicWithCollesResponse.getSimilarityOrderedListList();
+        log.info("特征比对{}， 集合{}, 结果{}", bodyKey, picCollesList, similarityListForQuery);
+
+        return compareSimilarity(picCollesList, similarityListForQuery);
+    }
+
+    @Override
+    public CompareSimilarityDto comparePicWithCollection(TaskDetailInfoDto task, String picKey) throws Exception {
+
+        if (TaskDetailInfoDto.TaskType.FACE == task.getTaskType() ){
+            return compareFaceWithCollection(task, picKey);
+        }else if ( TaskDetailInfoDto.TaskType.BODY == task.getTaskType() ){
+            return compareBodyWithCollection(task, picKey);
+        }else {
+            return null;
+        }
+
+    }
+
+    @Override
+    public String compareCollectionWithStudent(String faceColle) {
+
+        ArrayList<String> faceColleList = new ArrayList<>();
+        faceColleList.add(faceColle);
+
+        ContrastCollesWithBaseInfoRequest build = ContrastCollesWithBaseInfoRequest.newBuilder()
+                .addAllPicColles(faceColleList)
+                .build();
+        ContrastCollesWithBaseInfoResponse contrastCollesWithBaseInfoResponse =
+                featureServiceBlockingStub.contrastCollesWithBaseInfoInRedis(build);
+
+        ProtocolStringList colleWithStudentResultsList = contrastCollesWithBaseInfoResponse.getColleWithStudentResultsList();
+        log.info("集合{}，对比基础库的结果{}", faceColle, colleWithStudentResultsList);
+        if (CollectionUtils.isEmpty(colleWithStudentResultsList)){
+            return null;
+        }
+        return colleWithStudentResultsList.get(0).split("\\|")[1];
+    }
+
+
+
+    private CompareSimilarityDto compareSimilarity(List<String> picCollesList, List<Double> similarityListForQuery) {
         if (CollectionUtils.isEmpty(similarityListForQuery)){
 //            没有结果
             return null;
@@ -104,33 +177,7 @@ public class FaceFeatureServiceImpl implements FaceFeatureService {
         return compareSimilarityDto;
     }
 
-    @Override
-    public Map<String, String> compareCollectionWithStudent(List<String> faceColles) {
 
-        Map<String, String> map = new HashedMap();
-        map.put(faceColles.get(0), "1001");
-        return map;
-    }
-
-    @Override
-    public String compareCollectionWithStudent(String faceColle) {
-
-        ArrayList<String> faceColleList = new ArrayList<>();
-        faceColleList.add(faceColle);
-
-        ContrastCollesWithBaseInfoRequest build = ContrastCollesWithBaseInfoRequest.newBuilder()
-                .addAllPicColles(faceColleList)
-                .build();
-        ContrastCollesWithBaseInfoResponse contrastCollesWithBaseInfoResponse =
-                featureServiceBlockingStub.contrastCollesWithBaseInfoInRedis(build);
-
-        ProtocolStringList colleWithStudentResultsList = contrastCollesWithBaseInfoResponse.getColleWithStudentResultsList();
-        log.info("集合{}，对比基础库的结果{}", faceColle, colleWithStudentResultsList);
-        if (CollectionUtils.isEmpty(colleWithStudentResultsList)){
-            return null;
-        }
-        return colleWithStudentResultsList.get(0).split("\\|")[1];
-    }
 
     public static void main(String[] args) throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 

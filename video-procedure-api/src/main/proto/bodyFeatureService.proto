@@ -3,7 +3,7 @@ option java_multiple_files = true;
 package com.westwell.api.wellcare.body;
 
 
-message FacePicsInRedisRequest {
+message BodyPicsInRedisRequest {
     repeated string pic_keys = 1;
 }
 

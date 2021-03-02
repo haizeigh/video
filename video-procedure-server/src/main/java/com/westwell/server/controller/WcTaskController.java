@@ -35,13 +35,13 @@ public class WcTaskController {
     VideoMediaService videoMediaService;
 
     @Resource
-    FaceDetectionService faceDetectionService;
+    DetectionService detectionService;
 
     @Resource
-    FaceFeatureService faceFeatureService;
+    FeatureService featureService;
 
     @Resource
-    FaceIdentifyService faceIdentifyService;
+    IdentifyService identifyService;
 
     @Resource
     ResultDumpService resultDumpService;

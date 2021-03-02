@@ -3,7 +3,7 @@ package com.westwell.server.service.impl;
 import com.westwell.server.common.configs.DataConfig;
 import com.westwell.server.common.utils.ExportUtil;
 import com.westwell.server.common.utils.RedisUtils;
-import com.westwell.server.container.IdentifyFacesContainer;
+import com.westwell.server.container.IdentifyContainer;
 import com.westwell.server.dto.TaskDetailInfoDto;
 import com.westwell.server.dto.TaskFinalResultDto;
 import com.westwell.server.service.ResultDumpService;
@@ -29,11 +29,11 @@ public class ResultDumpServiceImpl implements ResultDumpService {
     RedisUtils redisUtils;
 
     @Resource
-    IdentifyFacesContainer identifyFacesContainer;
+    IdentifyContainer identifyContainer;
 
     @Override
     public void dumpFrameResult(TaskDetailInfoDto task, String textPath) throws Exception {
-        List<String> sortedFaceKeys = identifyFacesContainer.getSortedFaceKeys(task);
+        List<String> sortedFaceKeys = identifyContainer.getSortedFaceKeys(task);
 
         String taskNo = task.getTaskEntity().getTaskNo().toString();
         String cameraNo = task.getTaskEntity().getCameraNo().toString();
@@ -80,7 +80,7 @@ public class ResultDumpServiceImpl implements ResultDumpService {
     @Override
     public void dumpTaskFinalResult(TaskDetailInfoDto task, String textPath) throws Exception {
 
-        Map<String, String> identifyMap = identifyFacesContainer.getVideoIdentifyMap(task);
+        Map<String, String> identifyMap = identifyContainer.getVideoIdentifyMap(task);
         Integer taskNo = task.getTaskEntity().getTaskNo();
         Integer cameraNo = task.getTaskEntity().getCameraNo();
 
@@ -89,7 +89,7 @@ public class ResultDumpServiceImpl implements ResultDumpService {
 
         identifyMap.forEach( ( faceColleKey, studentId ) -> {
 //            遍历所有人
-            List<String> faceKeys = identifyFacesContainer.getPicsFromBucket(faceColleKey);
+            List<String> faceKeys = identifyContainer.getPicsFromBucket(faceColleKey);
             Collections.sort(faceKeys);
 
 //            遍历所有小图

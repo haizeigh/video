@@ -7,7 +7,7 @@ import com.westwell.server.common.configs.DataConfig;
 import com.westwell.server.common.exception.VPException;
 import com.westwell.server.common.utils.FfmpegUtil;
 import com.westwell.server.common.utils.RedisUtils;
-import com.westwell.server.container.IdentifyFacesContainer;
+import com.westwell.server.container.IdentifyContainer;
 import com.westwell.server.dto.TaskDetailInfoDto;
 import com.westwell.server.service.VideoMediaService;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +36,7 @@ public class VideoMediaServiceImpl implements VideoMediaService {
     VideoAsyncServiceImpl videoAsyncService;
 
     @Resource
-    IdentifyFacesContainer identifyFacesContainer;
+    IdentifyContainer identifyContainer;
 
     @Override
     public boolean cutVideoToPics(TaskDetailInfoDto task) {
@@ -119,13 +119,14 @@ public class VideoMediaServiceImpl implements VideoMediaService {
     }
 
     @Override
-    public void readPicsFromRedis(TaskDetailInfoDto task, List<String> faceKeys) throws Exception {
+    public void readPicsFromRedis(TaskDetailInfoDto task, List<String> faceKeys, String path) throws Exception {
 
         faceKeys.stream().forEach(faceKey -> {
 
             String pic = redisUtils.getHash(faceKey, "pic").toString();
             try {
-                ImgTransitionUtil.base64ToFile(pic, task.getTaskTemptPath() + "/faces/" + faceKey + ".jpeg");
+//                ImgTransitionUtil.base64ToFile(pic, task.getTaskTemptPath() + "/faces/" + faceKey + ".jpeg");
+                ImgTransitionUtil.base64ToFile(pic, path + "/" + faceKey + ".jpeg");
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -140,27 +141,7 @@ public class VideoMediaServiceImpl implements VideoMediaService {
         return true;
     }
 
-    @Override
-    public void readPicCollesFromRedis(TaskDetailInfoDto task) {
 
-        String facePicCachePath = task.getTaskTemptPath() + "/collection";
-        log.info("临时底库的地址" + facePicCachePath);
-        List<String> faceCollection = identifyFacesContainer.faceColleKeys(task);
-        faceCollection.forEach( faceColle -> {
-            List<String> picsFromBucket = identifyFacesContainer.getPicsFromBucket(faceColle);
-            picsFromBucket.forEach(faceKey -> {
-                String pic = redisUtils.getHash(faceKey, "pic").toString();
-                try {
-                    ImgTransitionUtil.base64ToFile(pic, facePicCachePath + "/" + faceColle+"/" + faceKey + ".jpeg");
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
-
-        });
-
-
-    }
 
     @Override
     public void readBasePicsFromRedis(TaskDetailInfoDto task) {
@@ -249,32 +230,64 @@ public class VideoMediaServiceImpl implements VideoMediaService {
         return exit == 0;
     }
 
+
+    @Override
+    public void readPicCollesFromRedis(TaskDetailInfoDto task) {
+
+        for (TaskDetailInfoDto.TaskType taskType : TaskDetailInfoDto.TaskType.values()) {
+
+            String picCachePath = task.getTaskTemptPathForCollection() + "/" + taskType;
+            log.info("临时底库的地址" + picCachePath);
+            task.setTaskType(taskType);
+
+            List<String> picCollection = identifyContainer.faceColleKeys(task);
+            picCollection.forEach( picColle -> {
+                List<String> picsFromBucket = identifyContainer.getPicsFromBucket(picColle);
+                picsFromBucket.forEach(faceKey -> {
+                    String pic = redisUtils.getHash(faceKey, "pic").toString();
+                    try {
+                        ImgTransitionUtil.base64ToFile(pic, picCachePath + "/" + picColle+"/" + faceKey + ".jpeg");
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+
+            });
+        }
+        task.setTaskType(null);
+    }
+
     @Override
     public void readfacesCollesFromRedis(TaskDetailInfoDto task) {
 
+        for (TaskDetailInfoDto.TaskType taskType : TaskDetailInfoDto.TaskType.values()) {
 
-        String facePicCachePath = task.getTaskTemptPath() + "/faces-collection";
-        log.info("临时底库有标签的地址" + facePicCachePath);
-        List<String> faceCollection = identifyFacesContainer.faceColleKeys(task);
-        faceCollection.forEach( faceColle -> {
+            String labelPicCachePath = task.getTaskTemptPathForLabelCollection() + "/" + taskType;
+            log.info("临时底库有标签的地址" + labelPicCachePath);
+            task.setTaskType(taskType);
 
-            String identify = identifyFacesContainer.getIdentify(faceColle, task);
-            if (Strings.isNullOrEmpty(identify)){
+            List<String> picCollection = identifyContainer.faceColleKeys(task);
+            picCollection.forEach( picColle -> {
+
+                String identify = identifyContainer.getIdentify(picColle, task);
+                if (Strings.isNullOrEmpty(identify)){
 //                无标签
-                return;
-            }
-
-            List<String> picsFromBucket = identifyFacesContainer.getPicsFromBucket(faceColle);
-            picsFromBucket.forEach(faceKey -> {
-                String pic = redisUtils.getHash(faceKey, "pic").toString();
-                try {
-                    ImgTransitionUtil.base64ToFile(pic, facePicCachePath + "/" + identify+"/" + faceKey + ".jpeg");
-                } catch (Exception e) {
-                    e.printStackTrace();
+                    return;
                 }
-            });
 
-        });
+                List<String> picsFromBucket = identifyContainer.getPicsFromBucket(picColle);
+                picsFromBucket.forEach(faceKey -> {
+                    String pic = redisUtils.getHash(faceKey, "pic").toString();
+                    try {
+                        ImgTransitionUtil.base64ToFile(pic, labelPicCachePath + "/" + identify+"/" + faceKey + ".jpeg");
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+
+            });
+        }
+        task.setTaskType(null);
     }
 
 }
