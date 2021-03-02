@@ -1,0 +1,45 @@
+syntax = "proto3";
+option java_multiple_files = true;
+package com.westwell.api.wellcare.body;
+
+
+message FacePicsInRedisRequest {
+    repeated string pic_keys = 1;
+}
+
+message ExtractFeatureInRedisResponse {
+    string success = 1;
+}
+
+message ContrastPicWithCollesRequest {
+    string pic_key = 1; // 图片的key
+    repeated string pic_colles = 2;  // 图片集合的列表
+}
+
+message ContrastPicWithCollesResponse {
+    repeated double similarity_ordered_list = 1; // 相似度结果
+
+    //    错误码 0标识成功
+    int32 code = 2;
+    //    错误信息
+    string msg = 3;
+}
+
+
+service BodyFeatureService {
+
+
+//    使用body信息的接口
+    //提取body图片的特征
+    //    PicsInRedisRequest 待处理图片key的列表
+    //    CallFeatureInRedisResponse 处理结果
+    rpc extractBodyFeatureInRedis(FacePicsInRedisRequest) returns (ExtractFeatureInRedisResponse);
+
+    //对比一张body图片和redis中body图片集合的相似度
+    //    ContrastPicWithCollesRequest 图片 以及 图片集合
+    //    ContrastPicWithCollesResponse 图片 与 图片集合 的相似度
+    rpc comparePicBodyWithCollesInRedis(ContrastPicWithCollesRequest) returns (ContrastPicWithCollesResponse);
+}
+
+
+
