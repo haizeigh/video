@@ -56,6 +56,7 @@ public class FaceFeatureServiceImpl implements FaceFeatureService {
             return null;
         }
         List<Double> similarityOrderedListList = new ArrayList<>(similarityListForQuery);
+        Collections.sort(similarityOrderedListList);
 
         CompareSimilarityDto compareSimilarityDto = new CompareSimilarityDto();
 
@@ -69,7 +70,7 @@ public class FaceFeatureServiceImpl implements FaceFeatureService {
 //            太似性 返回最相似
             compareSimilarityDto.setOverSimilarity(true);
 
-            Double most = similarityOrderedListList.get(0);
+            Double most = firstOverSimilarity.get();
             int mostIndex = similarityListForQuery.indexOf(most);
             String mostPicColle = picCollesList.get(mostIndex);
 
@@ -79,7 +80,8 @@ public class FaceFeatureServiceImpl implements FaceFeatureService {
         }
 
 
-        if (similarityOrderedListList.get(0) < DataConfig.MIN_SIMILARITY){
+//        比一下最大一个
+        if (similarityOrderedListList.get( similarityOrderedListList.size() -1 ) < DataConfig.MIN_SIMILARITY){
 //            都不相似，单独的结果 不用比较
             log.info("very less similarity");
             return compareSimilarityDto;
