@@ -5,7 +5,7 @@ import com.google.protobuf.ProtocolStringList;
 import com.westwell.api.*;
 import com.westwell.api.wellcare.body.BodyFeatureServiceGrpc;
 import com.westwell.server.common.configs.DataConfig;
-import com.westwell.server.container.IdentifyContainer;
+import com.westwell.server.container.IdentifyContainerManager;
 import com.westwell.server.dto.CompareSimilarityDto;
 import com.westwell.server.dto.TaskDetailInfoDto;
 import com.westwell.server.service.FeatureService;
@@ -30,7 +30,7 @@ public class FeatureServiceImpl implements FeatureService {
 
 
     @Resource
-    IdentifyContainer identifyContainer;
+    IdentifyContainerManager identifyContainerManager;
 
     @Override
     public boolean extractFaceFeature(List<String> picKeys) {
@@ -56,7 +56,7 @@ public class FeatureServiceImpl implements FeatureService {
     @Override
     public CompareSimilarityDto compareFaceWithCollection(TaskDetailInfoDto task, String faceKey) throws Exception {
 
-        List<String> picCollesList = identifyContainer.faceColleKeys(task);
+        List<String> picCollesList = identifyContainerManager.picColleKeys(task);
         ContrastPicWithCollesRequest build = ContrastPicWithCollesRequest.newBuilder()
                 .setPicKey(faceKey)
                 .addAllPicColles(picCollesList)
@@ -74,7 +74,7 @@ public class FeatureServiceImpl implements FeatureService {
     @Override
     public CompareSimilarityDto compareBodyWithCollection(TaskDetailInfoDto task, String bodyKey) throws Exception {
 
-        List<String> picCollesList = identifyContainer.faceColleKeys(task);
+        List<String> picCollesList = identifyContainerManager.picColleKeys(task);
         com.westwell.api.wellcare.body.ContrastPicWithCollesRequest build = com.westwell.api.wellcare.body.ContrastPicWithCollesRequest.newBuilder()
                 .setPicKey(bodyKey)
                 .addAllPicColles(picCollesList)

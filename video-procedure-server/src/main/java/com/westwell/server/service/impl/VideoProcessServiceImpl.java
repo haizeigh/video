@@ -2,7 +2,7 @@ package com.westwell.server.service.impl;
 
 import com.westwell.server.common.enums.TaskStatusEnum;
 import com.westwell.server.common.exception.VPException;
-import com.westwell.server.container.IdentifyContainer;
+import com.westwell.server.container.IdentifyContainerManager;
 import com.westwell.server.container.VideoContainer;
 import com.westwell.server.dto.TaskDetailInfoDto;
 import com.westwell.server.entity.WcTaskEntity;
@@ -39,7 +39,7 @@ public class VideoProcessServiceImpl implements VideoProcessService {
     IdentifyService identifyService;
 
     @Resource
-    IdentifyContainer identifyContainer;
+    IdentifyContainerManager identifyContainerManager;
 
     @Override
     @Async("taskExecutor")
@@ -70,7 +70,7 @@ public class VideoProcessServiceImpl implements VideoProcessService {
             List<String> picKeyList = videoMediaService.writePicsToRedis(task);
 
             List<String> faces = identifyFaces(task, picKeyList);
-
+            //body的识别依赖于face，不方便改为异步
             List<String> bodies = identifyBodies(task, picKeyList);
 
             log.info("清理原图..");
@@ -96,10 +96,7 @@ public class VideoProcessServiceImpl implements VideoProcessService {
 
     private List<String> identifyBodies(TaskDetailInfoDto task, List<String> picKeyList) throws Exception {
 
-        TaskDetailInfoDto taskDetailInfoDto = new TaskDetailInfoDto();
-        BeanUtils.copyProperties(task, taskDetailInfoDto);
-        taskDetailInfoDto.setTaskType(TaskDetailInfoDto.TaskType.BODY);
-        task = taskDetailInfoDto;
+
 
         log.info("人体检测...");
         List<String> bodyKeyList = detectionService.detectBodiesInPic(picKeyList);
@@ -107,6 +104,12 @@ public class VideoProcessServiceImpl implements VideoProcessService {
             log.info("本次任务没有body");
             return null;
         }
+
+        task.setBodies(bodyKeyList);
+        TaskDetailInfoDto taskDetailInfoDto = new TaskDetailInfoDto();
+        BeanUtils.copyProperties(task, taskDetailInfoDto);
+        taskDetailInfoDto.setTaskType(TaskDetailInfoDto.TaskType.BODY);
+        task = taskDetailInfoDto;
 
         log.info("输出每一帧的body图");
         videoMediaService.readPicsFromRedis(task, bodyKeyList, task.getTaskTemptPathForBody());
@@ -127,11 +130,6 @@ public class VideoProcessServiceImpl implements VideoProcessService {
 
     private List<String> identifyFaces(TaskDetailInfoDto task, List<String> picKeyList) throws Exception {
         //            检测人脸
-        TaskDetailInfoDto taskDetailInfoDto = new TaskDetailInfoDto();
-        BeanUtils.copyProperties(task, taskDetailInfoDto);
-        taskDetailInfoDto.setTaskType(TaskDetailInfoDto.TaskType.FACE);
-        task = taskDetailInfoDto;
-
 
         log.info("人脸检测...");
         List<String> faceKeyList = detectionService.detectFacesInPic(picKeyList);
@@ -139,6 +137,12 @@ public class VideoProcessServiceImpl implements VideoProcessService {
             log.info("本次任务没有face");
             return null;
         }
+
+        task.setFaces(faceKeyList);
+        TaskDetailInfoDto taskDetailInfoDto = new TaskDetailInfoDto();
+        BeanUtils.copyProperties(task, taskDetailInfoDto);
+        taskDetailInfoDto.setTaskType(TaskDetailInfoDto.TaskType.FACE);
+        task = taskDetailInfoDto;
 
         log.info("输出每一帧面部");
         videoMediaService.readPicsFromRedis(task, faceKeyList, task.getTaskTemptPathForFace());
@@ -162,20 +166,20 @@ public class VideoProcessServiceImpl implements VideoProcessService {
 
     public void clearVideoCache(TaskDetailInfoDto task) {
         //todo 清理任务
-        log.info("格式化单次任务");
+        log.info("格式化单次任务{}", task);
 //        本地图片 redis原图 redis小图 redis小图集合 本地帧集合 本地容器
-        VideoContainer videoContainer = identifyContainer.getIdentifyMap().get(task.getTaskCameraPrefix());
+        VideoContainer videoContainer = identifyContainerManager.getVideoContainerMap().get(task.getTaskCameraPrefix());
         if (videoContainer == null){
             return;
         }
 
 
-        List<String> sortedFaceKeys = identifyContainer.getSortedFaceKeys(task);
+        List<String> sortedFaceKeys = identifyContainerManager.getSortedFaceKeys(task);
         videoMediaService.clearListInRedis(sortedFaceKeys);
 
-        List<String> list = identifyContainer.faceColleKeys(task);
+        List<String> list = identifyContainerManager.picColleKeys(task);
         videoMediaService.clearListInRedis(list);
-        identifyContainer.getIdentifyMap().remove(task.getTaskCameraPrefix());
+        identifyContainerManager.getVideoContainerMap().remove(task.getTaskCameraPrefix());
 
     }
 

@@ -13,12 +13,15 @@ public class FaceCollectionChangeEvent extends ApplicationEvent {
 
     private String colleKey;
 
+    private String picKey;
+
     public FaceCollectionChangeEvent(Object source) {
         super(source);
     }
 
-    public FaceCollectionChangeEvent(Object source, String colleKey) {
+    public FaceCollectionChangeEvent(Object source, String colleKey, String picKey) {
         super(source);
         this.colleKey = colleKey;
+        this.picKey = picKey;
     }
 }

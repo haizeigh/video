@@ -2,8 +2,6 @@ package com.westwell.server.service.impl;
 
 import com.westwell.api.common.utils.DateUtils;
 import com.westwell.server.common.configs.DataConfig;
-import com.westwell.server.common.enums.TaskStatusEnum;
-import com.westwell.server.common.exception.VPException;
 import com.westwell.server.common.utils.DateSplitUtils;
 import com.westwell.server.dto.RouterCameraResultDto;
 import com.westwell.server.dto.TaskDetailInfoDto;
@@ -66,36 +64,34 @@ public class WcVideoManagerServiceImpl implements WcVideoManagerService {
             }
         }
 //        long end = System.currentTimeMillis();
-
         //导出数据
-        for (TaskDetailInfoDto task : taskDetailInfoDtoList) {
-            if (!task.getTaskEntity().getTaskStatus().equals(TaskStatusEnum.SUCCESS.getCode())) {
-                log.error("任务{}视频解析出错", task);
-                continue;
-            }
+        TaskDetailInfoDto fistTask = taskDetailInfoDtoList.get(0);
+        for (TaskDetailInfoDto.TaskType taskType : TaskDetailInfoDto.TaskType.values()) {
 
             try {
+
+                fistTask.setTaskType(taskType);
                 log.info("输出临时底库无标签的图片");
-                videoMediaService.readPicCollesFromRedis(task);
+                videoMediaService.readPicCollesFromRedis(fistTask);
 
                 log.info("输出临时底库有标签的图片");
-                videoMediaService.readfacesCollesFromRedis(task);
+                videoMediaService.readfacesCollesFromRedis(fistTask);
 
-                String textPath = task.getTaskPath() + "/identify";
-                resultDumpService.dumpFrameResult(task, textPath);
-                resultDumpService.dumpTaskFinalResult(task, textPath);
+                String textPath = fistTask.getTaskDumpPath();
+                resultDumpService.dumpFrameResult(fistTask, textPath);
+                resultDumpService.dumpTaskFinalResult(fistTask, textPath);
 
             } catch (Exception e) {
-                log.error("视频解析或者导出文件出错", e);
-                throw new VPException("视频解析或者导出文件出错", e);
+                log.error("任务{}导出文件出错", fistTask, e);
+//                throw new VPException("视频解析或者导出文件出错", e);
             } finally {
-                long end = System.currentTimeMillis();
-                System.out.println("总耗时 ：" + (end - start));
-                log.info("清理临时数据");
-                videoProcessService.clearVideoCache(task);
+                videoProcessService.clearVideoCache(fistTask);
             }
-        }
 
+        }
+        long end = System.currentTimeMillis();
+        System.out.println("总耗时 ：" + (end - start));
+        log.info("清理临时数据");
 
         RouterCameraResultDto routerCameraResultDto = new RouterCameraResultDto();
         routerCameraResultDto.setCameraNo(cameraNo);

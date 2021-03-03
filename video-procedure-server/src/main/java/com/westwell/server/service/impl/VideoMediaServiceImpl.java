@@ -7,7 +7,7 @@ import com.westwell.server.common.configs.DataConfig;
 import com.westwell.server.common.exception.VPException;
 import com.westwell.server.common.utils.FfmpegUtil;
 import com.westwell.server.common.utils.RedisUtils;
-import com.westwell.server.container.IdentifyContainer;
+import com.westwell.server.container.IdentifyContainerManager;
 import com.westwell.server.dto.TaskDetailInfoDto;
 import com.westwell.server.service.VideoMediaService;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +36,7 @@ public class VideoMediaServiceImpl implements VideoMediaService {
     VideoAsyncServiceImpl videoAsyncService;
 
     @Resource
-    IdentifyContainer identifyContainer;
+    IdentifyContainerManager identifyContainerManager;
 
     @Override
     public boolean cutVideoToPics(TaskDetailInfoDto task) {
@@ -234,15 +234,13 @@ public class VideoMediaServiceImpl implements VideoMediaService {
     @Override
     public void readPicCollesFromRedis(TaskDetailInfoDto task) {
 
-        for (TaskDetailInfoDto.TaskType taskType : TaskDetailInfoDto.TaskType.values()) {
 
-            String picCachePath = task.getTaskTemptPathForCollection() + "/" + taskType;
+            String picCachePath = task.getTaskTemptPathForCollection();
             log.info("临时底库的地址" + picCachePath);
-            task.setTaskType(taskType);
 
-            List<String> picCollection = identifyContainer.faceColleKeys(task);
+            List<String> picCollection = identifyContainerManager.picColleKeys(task);
             picCollection.forEach( picColle -> {
-                List<String> picsFromBucket = identifyContainer.getPicsFromBucket(picColle);
+                List<String> picsFromBucket = identifyContainerManager.getPicsFromBucket(picColle);
                 picsFromBucket.forEach(faceKey -> {
                     String pic = redisUtils.getHash(faceKey, "pic").toString();
                     try {
@@ -253,29 +251,25 @@ public class VideoMediaServiceImpl implements VideoMediaService {
                 });
 
             });
-        }
-        task.setTaskType(null);
     }
 
     @Override
     public void readfacesCollesFromRedis(TaskDetailInfoDto task) {
 
-        for (TaskDetailInfoDto.TaskType taskType : TaskDetailInfoDto.TaskType.values()) {
 
-            String labelPicCachePath = task.getTaskTemptPathForLabelCollection() + "/" + taskType;
+            String labelPicCachePath = task.getTaskTemptPathForLabelCollection() ;
             log.info("临时底库有标签的地址" + labelPicCachePath);
-            task.setTaskType(taskType);
 
-            List<String> picCollection = identifyContainer.faceColleKeys(task);
+            List<String> picCollection = identifyContainerManager.picColleKeys(task);
             picCollection.forEach( picColle -> {
 
-                String identify = identifyContainer.getIdentify(picColle, task);
+                String identify = identifyContainerManager.getIdentify(picColle, task);
                 if (Strings.isNullOrEmpty(identify)){
 //                无标签
                     return;
                 }
 
-                List<String> picsFromBucket = identifyContainer.getPicsFromBucket(picColle);
+                List<String> picsFromBucket = identifyContainerManager.getPicsFromBucket(picColle);
                 picsFromBucket.forEach(faceKey -> {
                     String pic = redisUtils.getHash(faceKey, "pic").toString();
                     try {
@@ -287,7 +281,5 @@ public class VideoMediaServiceImpl implements VideoMediaService {
 
             });
         }
-        task.setTaskType(null);
-    }
 
 }

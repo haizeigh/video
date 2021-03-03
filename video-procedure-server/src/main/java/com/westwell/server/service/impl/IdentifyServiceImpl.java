@@ -3,7 +3,7 @@ package com.westwell.server.service.impl;
 import com.google.common.base.Strings;
 import com.westwell.server.common.configs.DataConfig;
 import com.westwell.server.common.utils.RedisUtils;
-import com.westwell.server.container.IdentifyContainer;
+import com.westwell.server.container.IdentifyContainerManager;
 import com.westwell.server.dto.CompareSimilarityDto;
 import com.westwell.server.dto.TaskDetailInfoDto;
 import com.westwell.server.service.FeatureService;
@@ -27,7 +27,7 @@ public class IdentifyServiceImpl implements IdentifyService {
     RedisUtils redisUtils;
 
     @Resource
-    IdentifyContainer identifyContainer;
+    IdentifyContainerManager identifyContainerManager;
 
 
     @Override
@@ -50,7 +50,7 @@ public class IdentifyServiceImpl implements IdentifyService {
             return false;
         }
 
-        identifyContainer.initBucket(picKeyList, task);
+        identifyContainerManager.initBucket(picKeyList, task);
 
         for (String picKey : picKeyList) {
 
@@ -63,9 +63,9 @@ public class IdentifyServiceImpl implements IdentifyService {
             String tempPicColleKey = compareSimilarityDto.getPicColleKey();
 //            识别出出来了具体人物
             if (!Strings.isNullOrEmpty(tempPicColleKey)
-                    && identifyContainer.containsKey(tempPicColleKey, task)
-                    && !Strings.isNullOrEmpty(identifyContainer.getIdentify(tempPicColleKey, task))) {
-                String identify = identifyContainer.getIdentify(tempPicColleKey, task);
+                    && identifyContainerManager.containsKey(tempPicColleKey, task)
+                    && !Strings.isNullOrEmpty(identifyContainerManager.getIdentify(tempPicColleKey, task))) {
+                String identify = identifyContainerManager.getIdentify(tempPicColleKey, task);
                 log.debug("find the student" + identify);
                 redisUtils.putHash(picKey, DataConfig.STUDENT_ID, identify);
             }
@@ -80,11 +80,11 @@ public class IdentifyServiceImpl implements IdentifyService {
             if (!Strings.isNullOrEmpty(tempPicColleKey)) {
 //             归队
                 log.info(picKey + "加入底库" + tempPicColleKey);
-                identifyContainer.addPicToExistBucket(picKey, tempPicColleKey, task);
+                identifyContainerManager.addPicToExistBucket(picKey, tempPicColleKey, task);
             } else {
 //             增加新的集合
                 log.info(picKey + "创建新的底库");
-                identifyContainer.addPicToNewBucket(picKey, task);
+                identifyContainerManager.addPicToNewBucket(picKey, task);
             }
         }
         return true;

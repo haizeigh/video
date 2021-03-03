@@ -8,6 +8,7 @@ import com.westwell.server.entity.WcTaskEntity;
 import lombok.*;
 
 import java.util.Date;
+import java.util.List;
 
 @Builder
 @Data
@@ -19,6 +20,10 @@ public class TaskDetailInfoDto {
     private WcTaskEntity taskEntity;
 
     private WcCameraInfoEntity cameraInfoEntity;
+
+    private List<String> faces;
+
+    private List<String> bodies;
 
     private String taskCameraPrefix;
 
@@ -102,11 +107,15 @@ public class TaskDetailInfoDto {
     }
 
     public String getTaskTemptPathForCollection() {
-        return getTaskTemptPath() + "/collection";
+        return getTaskTemptPath() + "/collection/" + taskType.getCode();
     }
 
     public String getTaskTemptPathForLabelCollection() {
         return getTaskTemptPath() + "/labelCollection";
+    }
+
+    public String getTaskDumpPath() {
+        return getTaskPath() + "/identify"  + taskType.getCode();
     }
 
     public enum TaskType{

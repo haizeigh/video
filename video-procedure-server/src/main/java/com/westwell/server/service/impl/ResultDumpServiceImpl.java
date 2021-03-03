@@ -3,7 +3,7 @@ package com.westwell.server.service.impl;
 import com.westwell.server.common.configs.DataConfig;
 import com.westwell.server.common.utils.ExportUtil;
 import com.westwell.server.common.utils.RedisUtils;
-import com.westwell.server.container.IdentifyContainer;
+import com.westwell.server.container.IdentifyContainerManager;
 import com.westwell.server.dto.TaskDetailInfoDto;
 import com.westwell.server.dto.TaskFinalResultDto;
 import com.westwell.server.service.ResultDumpService;
@@ -29,11 +29,11 @@ public class ResultDumpServiceImpl implements ResultDumpService {
     RedisUtils redisUtils;
 
     @Resource
-    IdentifyContainer identifyContainer;
+    IdentifyContainerManager identifyContainerManager;
 
     @Override
     public void dumpFrameResult(TaskDetailInfoDto task, String textPath) throws Exception {
-        List<String> sortedFaceKeys = identifyContainer.getSortedFaceKeys(task);
+        List<String> sortedFaceKeys = identifyContainerManager.getSortedFaceKeys(task);
 
         String taskNo = task.getTaskEntity().getTaskNo().toString();
         String cameraNo = task.getTaskEntity().getCameraNo().toString();
@@ -53,6 +53,7 @@ public class ResultDumpServiceImpl implements ResultDumpService {
             map.put("camera_no", cameraNo);
             map.put("pic_time", split[split.length - 3]);
             map.put("frame_no", split[split.length - 2]);
+            //todo 少属性
             dataList.add(map);
         }
 
@@ -80,7 +81,7 @@ public class ResultDumpServiceImpl implements ResultDumpService {
     @Override
     public void dumpTaskFinalResult(TaskDetailInfoDto task, String textPath) throws Exception {
 
-        Map<String, String> identifyMap = identifyContainer.getVideoIdentifyMap(task);
+        Map<String, String> identifyMap = identifyContainerManager.getVideoIdentifyMap(task);
         Integer taskNo = task.getTaskEntity().getTaskNo();
         Integer cameraNo = task.getTaskEntity().getCameraNo();
 
@@ -89,7 +90,7 @@ public class ResultDumpServiceImpl implements ResultDumpService {
 
         identifyMap.forEach( ( faceColleKey, studentId ) -> {
 //            遍历所有人
-            List<String> faceKeys = identifyContainer.getPicsFromBucket(faceColleKey);
+            List<String> faceKeys = identifyContainerManager.getPicsFromBucket(faceColleKey);
             Collections.sort(faceKeys);
 
 //            遍历所有小图

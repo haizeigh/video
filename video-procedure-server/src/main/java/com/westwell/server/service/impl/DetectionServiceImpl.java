@@ -3,7 +3,7 @@ package com.westwell.server.service.impl;
 import com.westwell.api.DetectPicsInRedisResponse;
 import com.westwell.api.DetectionServiceGrpc;
 import com.westwell.api.PicsInRedisRequest;
-import com.westwell.server.container.IdentifyContainer;
+import com.westwell.server.container.IdentifyContainerManager;
 import com.westwell.server.dto.TaskDetailInfoDto;
 import com.westwell.server.service.DetectionService;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +17,7 @@ import java.util.List;
 public class DetectionServiceImpl implements DetectionService {
 
     @Resource
-    IdentifyContainer identifyContainer;
+    IdentifyContainerManager identifyContainerManager;
 
     @Resource
     DetectionServiceGrpc.DetectionServiceBlockingStub detectionServiceBlockingStub;
@@ -37,7 +37,7 @@ public class DetectionServiceImpl implements DetectionService {
 
     @Override
     public void storePicFrames(TaskDetailInfoDto task, List<String> picKeys) {
-        identifyContainer.addPicFrameKeys( picKeys, task);
+        identifyContainerManager.addPicFrameKeys( picKeys, task);
     }
 
     @Override

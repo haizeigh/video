@@ -42,6 +42,8 @@ public class DataConfig {
 
     public static double MIN_SIMILARITY = 0.6;
 
+    public static double MIN_IOU = 0.05;
+
 //    比对底库的频率
     public static int INTER_FRE = 1;
 
@@ -52,6 +54,12 @@ public class DataConfig {
     public static String IDENTIFY_CACHE_PATH = "/home/westwell/java/file/identify";
 
     public static String WELL_CARE_BASE = "wellcare:base";
+
+//    redis的location字段 保存坐标
+    public static String LOCATION = "location";
+
+    //    redis的pic字段 保存图片
+    public static String PIC = "pic";
 
 
     public static void main(String[] args) {
