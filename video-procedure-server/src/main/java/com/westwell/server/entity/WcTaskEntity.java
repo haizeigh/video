@@ -53,7 +53,7 @@ public class WcTaskEntity implements Serializable {
 	/**
 	 * 每秒的帧数
 	 */
-	private Integer frame;
+	private String frame;
 	/**
 	 * 任务的开始时间
 	 */

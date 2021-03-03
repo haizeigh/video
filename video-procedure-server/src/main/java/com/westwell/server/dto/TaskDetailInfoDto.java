@@ -40,6 +40,7 @@ public class TaskDetailInfoDto {
 
     private String videoPath;
     private String videoName;
+    private String videoFullPath;
 
 
 
@@ -109,6 +110,14 @@ public class TaskDetailInfoDto {
 
     public String getVideoName() {
         return "video.avi";
+    }
+
+    public String getVideoFullPath() {
+        if (!Strings.isNullOrEmpty(videoFullPath)){
+            return videoFullPath;
+        }
+        videoFullPath =  getVideoPath() + "/" + getVideoName();
+        return videoFullPath;
     }
 
     public String getTaskTemptPath() {

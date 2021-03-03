@@ -29,18 +29,18 @@ public class VideoAsyncServiceImpl {
         redisUtils.set(picKey, fileToBase64);
 
         long end = System.currentTimeMillis();
-//        System.out.println(Thread.currentThread().getName() + " 耗时 ：" + (end - start) );
+        System.out.println(Thread.currentThread().getName() + " 单次写入redis耗时 ：" + (end - start) );
         return new AsyncResult<String>(picKey);
     }
 
     String getPicKey(TaskDetailInfoDto task, File image){
 //        计算当前图的时间
-        Integer frame = task.getTaskEntity().getFrame();
+        Double frame = Double.parseDouble(task.getTaskEntity().getFrame());
         long imageNum = Long.parseLong(image.getName().split("\\.")[0]);
-        long milSec = (imageNum - 1) / frame * 1000;
+        long milSec = (long) ((imageNum - 1) / frame * 1000);
 
 //        计算图的帧序号
-        long frameNum = imageNum  - (imageNum - 1) / frame * frame;
+        long frameNum = imageNum  - (long)((imageNum - 1) / frame * frame);
 
 
 //        wellcare:任务编号:camera_编号:时间戳:帧编号

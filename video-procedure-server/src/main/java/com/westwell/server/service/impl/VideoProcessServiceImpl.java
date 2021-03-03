@@ -22,7 +22,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -64,19 +66,21 @@ public class VideoProcessServiceImpl implements VideoProcessService {
         try {
 
             // todo 测试
-//            Set<String> keys = redisTemplate.keys("*");
-//            keys.stream().forEach(key -> redisUtils.delete(key));
+            Set<String> keys = redisTemplate.keys("*");
+            keys.stream().forEach(key -> redisUtils.delete(key));
 //            初始化任务
             task = wcTaskService.getOneTaskDetailInfoDto(taskNo, cameraNo, videoStartTime, videoEndTime);
 
             //下载视频
-            log.info("下载视频...");
-            boolean readVideo = videoMediaService.readVideo(task);
-            if (!readVideo){
-                throw new VPException( task + "任务下载视频错误");
-            }
+            // todo 测试
+//            log.info("下载视频...");
+//            boolean readVideo = videoMediaService.readVideo(task);
+//            if (!readVideo){
+//                throw new VPException( task + "任务下载视频错误");
+//            }
 
-//            String picPath = task.getTaskPath();
+            // todo 测试
+            task.setVideoFullPath("/home/westwell/java/data/video/D03_20210104112956.mp4");
             boolean cutVideoToPics = videoMediaService.cutVideoToPics(task);
             if (!cutVideoToPics) {
                 throw new VPException("ffmpeg 截图出错");
@@ -156,6 +160,9 @@ public class VideoProcessServiceImpl implements VideoProcessService {
             log.info("本次任务没有face");
             return null;
         }
+
+        //todo 测试
+        faceKeyList = faceKeyList.stream().filter(faceKey -> !faceKey.contains("null")).collect(Collectors.toList());
 
         task.setFaces(faceKeyList);
         TaskDetailInfoDto taskDetailInfoDto = new TaskDetailInfoDto();

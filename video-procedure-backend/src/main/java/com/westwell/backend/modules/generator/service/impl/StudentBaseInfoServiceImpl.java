@@ -165,9 +165,9 @@ public class StudentBaseInfoServiceImpl extends ServiceImpl<StudentBaseInfoDao, 
                     String[] locationSplit = location.split("_");
                     int x1 = Integer.parseInt(locationSplit[0]);
                     int y1 = Integer.parseInt(locationSplit[1]);
-                    int x2 = Integer.parseInt(locationSplit[2]);
-                    int y2 = Integer.parseInt(locationSplit[3]);
-                    Integer thisArea = (x2 - x1) * (y2 -y1);
+                    int w = Integer.parseInt(locationSplit[2]);
+                    int h = Integer.parseInt(locationSplit[3]);
+                    Integer thisArea = w * h;
                     if ( thisArea > area){
                         area = thisArea;
                         bigPicKey = thisPic;

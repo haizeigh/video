@@ -40,6 +40,7 @@ public class VideoMediaServiceImpl implements VideoMediaService {
     @Override
     public boolean cutVideoToPics(TaskDetailInfoDto task) {
 
+        long start = System.currentTimeMillis();
         String picsPath  = task.getPicPath();
         File file = new File(picsPath);
         if (!file.exists()) {
@@ -51,7 +52,7 @@ public class VideoMediaServiceImpl implements VideoMediaService {
 //        commands.add("ffmpeg");
 
         commands.add("-i");
-        commands.add(task.getVideoPath() + "/" + task.getVideoName());
+        commands.add(task.getVideoFullPath());
 
 //        commands.add("-s");
 //        commands.add(DataConfig.PIXELS);
@@ -87,6 +88,8 @@ public class VideoMediaServiceImpl implements VideoMediaService {
         }catch (Exception e){
             throw new VPException("ffmpeg视频工具异常", e);
         }
+        long end = System.currentTimeMillis();
+        log.info("剪切图片耗时间{}ms", end-start);
 
         return exit == 0;
     }
@@ -94,6 +97,7 @@ public class VideoMediaServiceImpl implements VideoMediaService {
     @Override
     public List<String> writePicsToRedis(TaskDetailInfoDto task) throws Exception {
 
+        long start = System.currentTimeMillis();
         String picsPath = task.getPicPath();
         File file = new File(picsPath);
         if (!file.exists()){
@@ -114,6 +118,9 @@ public class VideoMediaServiceImpl implements VideoMediaService {
         for (Future<String> stringFuture : futureList) {
             picKeyList.add(stringFuture.get());
         }
+        long end = System.currentTimeMillis();
+        log.info("写图片到redis耗时间{}ms", end-start);
+
         return picKeyList;
     }
 
@@ -165,6 +172,7 @@ public class VideoMediaServiceImpl implements VideoMediaService {
     @Override
     public boolean readVideo(TaskDetailInfoDto task) {
 
+        long start = System.currentTimeMillis();
         String videoPath = task.getVideoPath();
 
         File file = new File(videoPath);
@@ -209,7 +217,7 @@ public class VideoMediaServiceImpl implements VideoMediaService {
 
         commands.add("-y");
 
-        commands.add(task.getVideoPath() + "/" +task.getVideoName());
+        commands.add(task.getVideoFullPath());
         StringBuffer commandsBuffer = new StringBuffer();
         for (int i = 0; i < commands.size(); i++)
             commandsBuffer.append(commands.get(i) + " ");
@@ -225,6 +233,8 @@ public class VideoMediaServiceImpl implements VideoMediaService {
         }catch (Exception e){
             throw new VPException("ffmpeg视频工具异常", e);
         }
+        long end = System.currentTimeMillis();
+        log.info("下载视频耗时间{}ms", end-start);
 
         return exit == 0;
     }

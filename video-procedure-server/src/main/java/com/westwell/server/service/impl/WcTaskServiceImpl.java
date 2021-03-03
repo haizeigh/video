@@ -41,7 +41,7 @@ public class WcTaskServiceImpl implements WcTaskService {
                 .cameraNo(DataConfig.CAMERA_NO)
                 .taskStatus(TaskStatusEnum.DOING.getCode())
                 .taskStartTime(new Date())
-                .frame(DataConfig.FRAME)
+                .frame(DataConfig.FRAME.toString())
                 .videoStartTime(DateUtils.stringToDate(DataConfig.VIDEO_START_TIME))
                 .videoEndTime(DateUtils.stringToDate(DataConfig.VIDEO_END_TIME))
                 .build();
@@ -63,7 +63,7 @@ public class WcTaskServiceImpl implements WcTaskService {
                 .cameraNo(cameraNo)
                 .taskStatus(TaskStatusEnum.DOING.getCode())
                 .taskStartTime(new Date())
-                .frame(DataConfig.FRAME)
+                .frame(DataConfig.FRAME.toString())
                 .videoStartTime(videoStartTime)
                 .videoEndTime(videoEndTime)
                 .build();

@@ -10,12 +10,12 @@ public class DataConfig {
     public static Integer CAMERA_NO = 1;
 
 //    视频开始时间
-    public static String VIDEO_START_TIME = "2021-02-23 14:59:40";
+    public static String VIDEO_START_TIME = "2021-02-23 11:30:00";
 
-    public static String VIDEO_END_TIME = "2021-02-23 14:59:50";
+    public static String VIDEO_END_TIME = "2021-02-23 11:43:00";
 
 //    一秒截图数
-    public static Integer FRAME = 2;
+    public static Double FRAME = 0.2;
 
 //    图片保存地址
     public static String PIC_CACHE_PATH = "/home/westwell/java/file/pics";
