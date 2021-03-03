@@ -1,7 +1,6 @@
 package com.westwell.server.controller;
 
 
-import com.westwell.server.entity.WcTaskEntity;
 import com.westwell.server.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,16 +57,15 @@ public class WcTaskController {
     /**
      * 列表
      */
-    @RequestMapping("/list")
-    public WcTaskEntity list(@RequestParam Map<String, Object> params) {
+    @RequestMapping("/start")
+    public String list(@RequestParam Map<String, Object> params) {
 
-        WcTaskEntity wcTaskEntity = wcTaskService.queryOne();
 
         List<Integer> cameraNos = new ArrayList<>();
         cameraNos.add(1);
         taskManagerService.routerCamera(cameraNos);
 
-        return wcTaskEntity;
+        return "success";
     }
 
 

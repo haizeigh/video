@@ -7,8 +7,10 @@ import com.westwell.server.container.IdentifyContainerManager;
 import com.westwell.server.dto.TaskDetailInfoDto;
 import com.westwell.server.dto.TaskFinalResultDto;
 import com.westwell.server.service.ResultDumpService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.collections.map.HashedMap;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
 public class ResultDumpServiceImpl implements ResultDumpService {
 
@@ -34,7 +37,10 @@ public class ResultDumpServiceImpl implements ResultDumpService {
     @Override
     public void dumpFrameResult(TaskDetailInfoDto task, String textPath) throws Exception {
         List<String> sortedFaceKeys = identifyContainerManager.getSortedFaceKeys(task);
-
+        if (CollectionUtils.isEmpty(sortedFaceKeys)){
+            log.info("任务no={}没有帧数据",task.getTaskEntity().getTaskNo() );
+            return;
+        }
         String taskNo = task.getTaskEntity().getTaskNo().toString();
         String cameraNo = task.getTaskEntity().getCameraNo().toString();
 
@@ -82,6 +88,11 @@ public class ResultDumpServiceImpl implements ResultDumpService {
     public void dumpTaskFinalResult(TaskDetailInfoDto task, String textPath) throws Exception {
 
         Map<String, String> identifyMap = identifyContainerManager.getVideoIdentifyMap(task);
+        if (MapUtils.isEmpty(identifyMap)){
+            log.info("任务no={}没有推理数据",task.getTaskEntity().getTaskNo() );
+            return;
+        }
+
         Integer taskNo = task.getTaskEntity().getTaskNo();
         Integer cameraNo = task.getTaskEntity().getCameraNo();
 

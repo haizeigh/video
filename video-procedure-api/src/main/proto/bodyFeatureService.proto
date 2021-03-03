@@ -33,7 +33,7 @@ service BodyFeatureService {
     //提取body图片的特征
     //    PicsInRedisRequest 待处理图片key的列表
     //    CallFeatureInRedisResponse 处理结果
-    rpc extractBodyFeatureInRedis(FacePicsInRedisRequest) returns (ExtractFeatureInRedisResponse);
+    rpc extractBodyFeatureInRedis(BodyPicsInRedisRequest) returns (ExtractFeatureInRedisResponse);
 
     //对比一张body图片和redis中body图片集合的相似度
     //    ContrastPicWithCollesRequest 图片 以及 图片集合

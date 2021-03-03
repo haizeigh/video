@@ -2,6 +2,7 @@ package com.westwell.server.service.impl;
 
 import com.westwell.server.common.enums.TaskStatusEnum;
 import com.westwell.server.common.exception.VPException;
+import com.westwell.server.common.utils.RedisUtils;
 import com.westwell.server.container.IdentifyContainerManager;
 import com.westwell.server.container.VideoContainer;
 import com.westwell.server.dto.TaskDetailInfoDto;
@@ -10,11 +11,15 @@ import com.westwell.server.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Future;
@@ -41,14 +46,26 @@ public class VideoProcessServiceImpl implements VideoProcessService {
     @Resource
     IdentifyContainerManager identifyContainerManager;
 
+
+    @Resource
+    RedisUtils redisUtils;
+
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+
+
     @Override
     @Async("taskExecutor")
     public Future<TaskDetailInfoDto> detectVideo(Integer taskNo, Integer cameraNo, Date videoStartTime, Date videoEndTime)  {
 
 
         TaskDetailInfoDto task = null;
+        List<String> picKeyList = new ArrayList<>();
         try {
 
+            // todo 测试
+//            Set<String> keys = redisTemplate.keys("*");
+//            keys.stream().forEach(key -> redisUtils.delete(key));
 //            初始化任务
             task = wcTaskService.getOneTaskDetailInfoDto(taskNo, cameraNo, videoStartTime, videoEndTime);
 
@@ -67,14 +84,11 @@ public class VideoProcessServiceImpl implements VideoProcessService {
 
 //           FFMPEG_PATH配置
             log.info("原图保存redis...");
-            List<String> picKeyList = videoMediaService.writePicsToRedis(task);
+            picKeyList = videoMediaService.writePicsToRedis(task);
 
             List<String> faces = identifyFaces(task, picKeyList);
             //body的识别依赖于face，不方便改为异步
-            List<String> bodies = identifyBodies(task, picKeyList);
-
-            log.info("清理原图..");
-            videoMediaService.clearListInRedis(picKeyList);
+//            List<String> bodies = identifyBodies(task, picKeyList);
 
             //todo 处理face 和 body 的关系
 
@@ -86,7 +100,12 @@ public class VideoProcessServiceImpl implements VideoProcessService {
             if (task != null && task.getTaskEntity() != null){
                 UpdateTaskStatus(task, TaskStatusEnum.FAIL);
             }
-            throw new VPException("解析视频出现错误", e);
+            log.info("解析失败");
+            return new AsyncResult(task);
+//            throw new VPException("解析视频出现错误", e);
+        }finally {
+            log.info("清理原图..");
+            videoMediaService.clearListInRedis(picKeyList);
         }
 
         log.info("解析成功");
@@ -140,7 +159,7 @@ public class VideoProcessServiceImpl implements VideoProcessService {
 
         task.setFaces(faceKeyList);
         TaskDetailInfoDto taskDetailInfoDto = new TaskDetailInfoDto();
-        BeanUtils.copyProperties(task, taskDetailInfoDto);
+        BeanUtils.copyProperties( task, taskDetailInfoDto, "taskCameraPrefix");
         taskDetailInfoDto.setTaskType(TaskDetailInfoDto.TaskType.FACE);
         task = taskDetailInfoDto;
 
@@ -166,7 +185,7 @@ public class VideoProcessServiceImpl implements VideoProcessService {
 
     public void clearVideoCache(TaskDetailInfoDto task) {
         //todo 清理任务
-        log.info("格式化单次任务{}", task);
+        log.info("格式化单次任务no={}", task.getTaskEntity().getTaskNo());
 //        本地图片 redis原图 redis小图 redis小图集合 本地帧集合 本地容器
         VideoContainer videoContainer = identifyContainerManager.getVideoContainerMap().get(task.getTaskCameraPrefix());
         if (videoContainer == null){
@@ -189,5 +208,17 @@ public class VideoProcessServiceImpl implements VideoProcessService {
         taskEntity.setTaskStatus(taskStatusEnum.getCode());
         taskEntity.setTaskEndTime(new Date());
         wcTaskService.update(taskEntity);
+    }
+
+    public static void main(String[] args) throws InvocationTargetException, IllegalAccessException {
+
+        TaskDetailInfoDto taskDetailInfoDto1 = new TaskDetailInfoDto();
+        taskDetailInfoDto1.setTaskPath("test");
+
+        TaskDetailInfoDto taskDetailInfoDto2 = new TaskDetailInfoDto();
+
+        org.apache.commons.beanutils.BeanUtils.copyProperties(taskDetailInfoDto1, taskDetailInfoDto2);
+        System.out.println(taskDetailInfoDto2);
+
     }
 }

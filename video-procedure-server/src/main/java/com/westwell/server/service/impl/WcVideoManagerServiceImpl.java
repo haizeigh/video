@@ -7,6 +7,7 @@ import com.westwell.server.dto.RouterCameraResultDto;
 import com.westwell.server.dto.TaskDetailInfoDto;
 import com.westwell.server.service.*;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
@@ -63,8 +64,17 @@ public class WcVideoManagerServiceImpl implements WcVideoManagerService {
                 e.printStackTrace();
             }
         }
+        RouterCameraResultDto routerCameraResultDto = new RouterCameraResultDto();
+        routerCameraResultDto.setCameraNo(cameraNo);
 //        long end = System.currentTimeMillis();
         //导出数据
+        if (CollectionUtils.isEmpty(taskDetailInfoDtoList)){
+            log.info("任务全部失败");
+            routerCameraResultDto.setResult(false);
+            return new AsyncResult(routerCameraResultDto);
+        }
+
+        boolean flag = true;
         TaskDetailInfoDto fistTask = taskDetailInfoDtoList.get(0);
         for (TaskDetailInfoDto.TaskType taskType : TaskDetailInfoDto.TaskType.values()) {
 
@@ -83,6 +93,7 @@ public class WcVideoManagerServiceImpl implements WcVideoManagerService {
 
             } catch (Exception e) {
                 log.error("任务{}导出文件出错", fistTask, e);
+                flag = false;
 //                throw new VPException("视频解析或者导出文件出错", e);
             } finally {
                 videoProcessService.clearVideoCache(fistTask);
@@ -93,9 +104,8 @@ public class WcVideoManagerServiceImpl implements WcVideoManagerService {
         System.out.println("总耗时 ：" + (end - start));
         log.info("清理临时数据");
 
-        RouterCameraResultDto routerCameraResultDto = new RouterCameraResultDto();
-        routerCameraResultDto.setCameraNo(cameraNo);
-        routerCameraResultDto.setResult(true);
+
+        routerCameraResultDto.setResult(flag);
         return new AsyncResult(routerCameraResultDto);
 
 

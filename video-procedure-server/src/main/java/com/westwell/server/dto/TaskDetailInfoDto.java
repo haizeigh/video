@@ -31,6 +31,8 @@ public class TaskDetailInfoDto {
 
     private String taskPath;
 
+    private String jobPath;
+
     private String taskTemptPath;
 
     private String picPath;
@@ -57,16 +59,31 @@ public class TaskDetailInfoDto {
         return taskCamera;
     }
 
+    public String getJobPath() {
+
+        if (Strings.isNullOrEmpty(jobPath)){
+            synchronized (this){
+                if (Strings.isNullOrEmpty(jobPath)){
+                    String jobPath = DataConfig.IDENTIFY_CACHE_PATH
+                            + "/" + DateUtils.format(new Date(), DateUtils.DATE_PATTERN)
+                            + "/" + taskEntity.getCameraNo()
+                            + "-" + taskEntity.getTaskNo();
+                    this.jobPath = jobPath;
+                    return jobPath;
+                }
+            }
+
+        }
+        return jobPath;
+    }
+
 
     public String getTaskPath() {
 
         if (Strings.isNullOrEmpty(taskPath)){
             synchronized (this){
                 if (Strings.isNullOrEmpty(taskPath)){
-                    String taskPath = DataConfig.IDENTIFY_CACHE_PATH
-                            + "/" + DateUtils.format(new Date(), DateUtils.DATE_PATTERN)
-                            + "/" + taskEntity.getCameraNo()
-                            + "-" + taskEntity.getTaskNo()
+                    String taskPath = getJobPath()
                             + "/" + DateUtils.format(taskEntity.getVideoStartTime(), DateUtils.DATE_TIME)
                             + "-" + DateUtils.format(taskEntity.getVideoEndTime(), DateUtils.DATE_TIME) ;
                     this.taskPath = taskPath;
@@ -107,15 +124,15 @@ public class TaskDetailInfoDto {
     }
 
     public String getTaskTemptPathForCollection() {
-        return getTaskTemptPath() + "/collection/" + taskType.getCode();
+        return getJobPath() + "/temptCollection/" + taskType;
     }
 
     public String getTaskTemptPathForLabelCollection() {
-        return getTaskTemptPath() + "/labelCollection";
+        return getJobPath() + "/labelCollection/"  + taskType;
     }
 
     public String getTaskDumpPath() {
-        return getTaskPath() + "/identify"  + taskType.getCode();
+        return getJobPath() + "/identify/"  + taskType;
     }
 
     public enum TaskType{

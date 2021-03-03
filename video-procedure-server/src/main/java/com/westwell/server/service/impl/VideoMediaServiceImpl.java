@@ -11,6 +11,7 @@ import com.westwell.server.container.IdentifyContainerManager;
 import com.westwell.server.dto.TaskDetailInfoDto;
 import com.westwell.server.service.VideoMediaService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -29,8 +30,6 @@ public class VideoMediaServiceImpl implements VideoMediaService {
     @Resource
     RedisUtils redisUtils;
 
-//    @Resource
-//    ImgTransitionUtil imgTransitionUtil;
 
     @Resource
     VideoAsyncServiceImpl videoAsyncService;
@@ -239,6 +238,10 @@ public class VideoMediaServiceImpl implements VideoMediaService {
             log.info("临时底库的地址" + picCachePath);
 
             List<String> picCollection = identifyContainerManager.picColleKeys(task);
+            if (CollectionUtils.isEmpty(picCollection)){
+                log.info("任务no={}没有底库数据",task.getTaskEntity().getTaskNo() );
+                return;
+            }
             picCollection.forEach( picColle -> {
                 List<String> picsFromBucket = identifyContainerManager.getPicsFromBucket(picColle);
                 picsFromBucket.forEach(faceKey -> {
@@ -261,6 +264,11 @@ public class VideoMediaServiceImpl implements VideoMediaService {
             log.info("临时底库有标签的地址" + labelPicCachePath);
 
             List<String> picCollection = identifyContainerManager.picColleKeys(task);
+            if (CollectionUtils.isEmpty(picCollection)){
+                log.info("任务no={}没有底库数据",task.getTaskEntity().getTaskNo() );
+                return;
+            }
+
             picCollection.forEach( picColle -> {
 
                 String identify = identifyContainerManager.getIdentify(picColle, task);

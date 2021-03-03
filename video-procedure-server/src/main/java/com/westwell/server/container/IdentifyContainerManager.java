@@ -84,6 +84,9 @@ public class IdentifyContainerManager {
 
     public  List<String> picColleKeys(TaskDetailInfoDto task) {
         VideoContainer videoContainer = videoContainerMap.get(task.getTaskCameraPrefix());
+        if (videoContainer == null){
+            return null;
+        }
         return videoContainer.getPicCollection();
     }
 
@@ -96,6 +99,9 @@ public class IdentifyContainerManager {
     public  List<String> getSortedFaceKeys(TaskDetailInfoDto task){
 
         VideoContainer videoContainer = videoContainerMap.get(task.getTaskCameraPrefix());
+        if (videoContainer == null){
+            return null;
+        }
         List<String> faces = videoContainer.getAllFrame();
         Collections.sort(faces);
         return faces;
@@ -137,8 +143,11 @@ public class IdentifyContainerManager {
     }
 
     public Map<String, String> getVideoIdentifyMap(TaskDetailInfoDto task) {
-
-        return videoContainerMap.get(task.getTaskCameraPrefix()).getIdentifyMap();
+        VideoContainer videoContainer = videoContainerMap.get(task.getTaskCameraPrefix());
+        if (videoContainer == null){
+            return null;
+        }
+        return videoContainer.getIdentifyMap();
     }
 
     public VideoContainer getVideoContainerByType(TaskDetailInfoDto task, TaskDetailInfoDto.TaskType taskType) {

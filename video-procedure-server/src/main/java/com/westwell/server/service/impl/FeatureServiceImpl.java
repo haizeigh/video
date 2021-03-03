@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.google.protobuf.ProtocolStringList;
 import com.westwell.api.*;
 import com.westwell.api.wellcare.body.BodyFeatureServiceGrpc;
+import com.westwell.api.wellcare.body.BodyPicsInRedisRequest;
 import com.westwell.server.common.configs.DataConfig;
 import com.westwell.server.container.IdentifyContainerManager;
 import com.westwell.server.dto.CompareSimilarityDto;
@@ -45,7 +46,7 @@ public class FeatureServiceImpl implements FeatureService {
     public boolean extractBodyFeature(List<String> picKeys) {
         log.info("提取body特征的图片数目{}", picKeys.size());
 
-        com.westwell.api.wellcare.body.FacePicsInRedisRequest.Builder builder = com.westwell.api.wellcare.body.FacePicsInRedisRequest.newBuilder();
+        BodyPicsInRedisRequest.Builder builder = BodyPicsInRedisRequest.newBuilder();
         builder.addAllPicKeys(picKeys);
 
         com.westwell.api.wellcare.body.ExtractFeatureInRedisResponse extractFeatureInRedisResponse = bodyFeatureServiceBlockingStub.extractBodyFeatureInRedis(builder.build());

@@ -26,7 +26,7 @@ public class DetectionServiceImpl implements DetectionService {
     @Override
     public List<String> detectFacesInPic(List<String> picKeys) {
 
-        log.info("待检测的face图片数目：{}", picKeys.size());
+        log.info("待检测的face图片数目：{}, 第一个{}", picKeys.size(), picKeys.get(0));
         PicsInRedisRequest.Builder builder = PicsInRedisRequest.newBuilder();
         builder.addAllPickeysReq(picKeys);
 
