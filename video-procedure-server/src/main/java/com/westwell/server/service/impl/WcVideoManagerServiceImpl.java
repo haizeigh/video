@@ -40,7 +40,7 @@ public class WcVideoManagerServiceImpl implements WcVideoManagerService {
 
         Date firstTime = DateUtils.stringToDate(DataConfig.VIDEO_START_TIME);
         Date endTime = DateUtils.stringToDate(DataConfig.VIDEO_END_TIME);
-        List<DateSplitUtils.DateSplit> dateSplits = DateSplitUtils.splitDate(firstTime, endTime, DateSplitUtils.IntervalType.HOUR, 1);
+        List<DateSplitUtils.DateSplit> dateSplits = DateSplitUtils.splitDate(firstTime, endTime, DateSplitUtils.IntervalType.MINUTE, DataConfig.INTERVAL_MINUTE);
 
         List<Future<TaskDetailInfoDto>> list = new ArrayList<>();
         long start = System.currentTimeMillis();

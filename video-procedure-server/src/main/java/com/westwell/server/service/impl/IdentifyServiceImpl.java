@@ -13,6 +13,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -50,7 +51,14 @@ public class IdentifyServiceImpl implements IdentifyService {
             return false;
         }
 
-        identifyContainerManager.initBucket(picKeyList, task);
+        boolean initBucket = identifyContainerManager.initBucket(picKeyList, task);
+        if (initBucket){
+            List<String> newFaceKeys = new ArrayList<>();
+            for (int i = 1; i < picKeyList.size(); i++) {
+                newFaceKeys.add(picKeyList.get(i));
+            }
+            picKeyList = newFaceKeys;
+        }
 
         for (String picKey : picKeyList) {
 

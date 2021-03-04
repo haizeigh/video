@@ -52,14 +52,22 @@ public class VideoAsyncServiceImpl {
                 .append(":")
                 .append(task.getCameraInfoEntity().getCameraNo())
                 .append(":")
-                .append(task.getTaskEntity().getTaskStartTime().getTime() + milSec )
+                .append(task.getTaskEntity().getVideoStartTime().getTime() + milSec )
                 .append(":")
                 .append(frameNum);
 
-        return stringBuilder.toString();
+        String newImageName = stringBuilder.toString();
+//        System.out.println(image.getParent() + "/" + newImageName);
+        File newImage = new File(image.getParent() + "/" + newImageName);
+        image.renameTo(newImage);
+
+        return newImageName;
     }
 
     public static void main(String[] args) {
         System.out.println(Long.parseLong("00030"));
+
+        File file = new File("/home/westwell/java/file/identify/2021-03-04/1-38/113000-113100/pic/000000006.jpeg");
+        System.out.println(file.getParent());
     }
 }

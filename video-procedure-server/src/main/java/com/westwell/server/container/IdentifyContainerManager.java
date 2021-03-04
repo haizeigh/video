@@ -123,7 +123,7 @@ public class IdentifyContainerManager {
 
 
 
-    public void initBucket(List<String> picKeys, TaskDetailInfoDto task) {
+    public boolean initBucket(List<String> picKeys, TaskDetailInfoDto task) {
 
         String taskCameraPrefix = task.getTaskCameraPrefix();
         if (!videoContainerMap.containsKey(taskCameraPrefix) || videoContainerMap.get(taskCameraPrefix).getPicCollection().size() == 0 ){
@@ -131,15 +131,13 @@ public class IdentifyContainerManager {
                 log.info("初始化容器");
                 if (!videoContainerMap.containsKey(taskCameraPrefix) || videoContainerMap.get(taskCameraPrefix).getPicCollection().size() == 0 ){
                     addPicToNewBucket(picKeys.get(0), task);
-      /*
-                    List<String> newFaceKeys = new ArrayList<>();
-                    for (int i = 1; i < faceKeys.size(); i++) {
-                        newFaceKeys.add(faceKeys.get(i));
-                    }
-                    faceKeys = newFaceKeys;*/
+                    return true;
+
                 }
+                return false;
             }
         }
+        return false;
     }
 
     public Map<String, String> getVideoIdentifyMap(TaskDetailInfoDto task) {

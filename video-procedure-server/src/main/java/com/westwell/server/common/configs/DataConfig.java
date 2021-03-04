@@ -12,10 +12,14 @@ public class DataConfig {
 //    视频开始时间
     public static String VIDEO_START_TIME = "2021-02-23 11:30:00";
 
-    public static String VIDEO_END_TIME = "2021-02-23 11:43:00";
+    public static String VIDEO_END_TIME = "2021-02-23 11:31:00";
+
+    //    一段视频切分的间隔
+    public static int INTERVAL_MINUTE = 60;
 
 //    一秒截图数
     public static Double FRAME = 0.2;
+
 
 //    图片保存地址
     public static String PIC_CACHE_PATH = "/home/westwell/java/file/pics";

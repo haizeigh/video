@@ -94,9 +94,6 @@ public class VideoProcessServiceImpl implements VideoProcessService {
             //body的识别依赖于face，不方便改为异步
 //            List<String> bodies = identifyBodies(task, picKeyList);
 
-            //todo 处理face 和 body 的关系
-
-
 
         } catch (Exception e) {
 

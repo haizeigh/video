@@ -146,7 +146,7 @@ public class TaskDetailInfoDto {
 
     public enum TaskType{
 
-        FACE("", "面部识别"),
+        FACE(":face", "面部识别"),
         BODY(":body", "身体识别");
 
         private String code;
