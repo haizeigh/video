@@ -85,7 +85,7 @@ public class WcVideoManagerServiceImpl implements WcVideoManagerService {
                 videoMediaService.readPicCollesFromRedis(fistTask);
 
                 log.info("输出临时底库有标签的图片");
-                videoMediaService.readfacesCollesFromRedis(fistTask);
+                videoMediaService.readLabelPicCollesFromRedis(fistTask);
 
                 String textPath = fistTask.getTaskDumpPath();
                 resultDumpService.dumpFrameResult(fistTask, textPath);
@@ -95,15 +95,15 @@ public class WcVideoManagerServiceImpl implements WcVideoManagerService {
                 log.error("任务{}导出文件出错", fistTask, e);
                 flag = false;
 //                throw new VPException("视频解析或者导出文件出错", e);
-            } finally {
+            }/* finally {
                 videoProcessService.clearVideoCache(fistTask);
-            }
+            }*/
 
         }
         long end = System.currentTimeMillis();
         System.out.println("总耗时 ：" + (end - start));
         log.info("清理临时数据");
-
+        videoProcessService.clearVideoCache(fistTask);
 
         routerCameraResultDto.setResult(flag);
         return new AsyncResult(routerCameraResultDto);

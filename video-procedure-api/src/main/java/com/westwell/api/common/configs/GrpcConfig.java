@@ -59,7 +59,7 @@ public class GrpcConfig {
     @Bean("bodyFeature")
     public ManagedChannel bodyFeatureChannel(@Qualifier("grpcTaskExecutor") Executor executor){
 //        ManagedChannel channel = ManagedChannelBuilder.forAddress("10.66.66.20", 50050)
-        ManagedChannel channel = ManagedChannelBuilder.forAddress("10.66.65.200", 50050)
+        ManagedChannel channel = ManagedChannelBuilder.forAddress("10.66.65.201", 50049)
                 .usePlaintext(true)
                 .executor(executor)
                 .build();

@@ -52,6 +52,7 @@ public class IdentifyServiceImpl implements IdentifyService {
         }
 
         boolean initBucket = identifyContainerManager.initBucket(picKeyList, task);
+
         if (initBucket){
             List<String> newFaceKeys = new ArrayList<>();
             for (int i = 1; i < picKeyList.size(); i++) {
@@ -80,10 +81,13 @@ public class IdentifyServiceImpl implements IdentifyService {
 
 
 //            继续构建底库
-            if (compareSimilarityDto.isOverSimilarity()) {
-//             丢弃
+/*            if (compareSimilarityDto.isOverSimilarity()) {
+
+                log.info(picKey + "加入底库" + tempPicColleKey);
+                identifyContainerManager.addPicToExistBucket(picKey, tempPicColleKey, task);
+
                 continue;
-            }
+            }*/
 
             if (!Strings.isNullOrEmpty(tempPicColleKey)) {
 //             归队

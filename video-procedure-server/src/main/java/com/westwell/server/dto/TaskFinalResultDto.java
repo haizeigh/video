@@ -13,7 +13,6 @@ import java.util.List;
 @NoArgsConstructor
 public class TaskFinalResultDto {
 
-//    String mapKey = "task_no,camera_no,student_id,label,start_time,end_time,locations";
 
     private String task_no;
 
@@ -21,7 +20,7 @@ public class TaskFinalResultDto {
 
     private String student_id;
 
-    private String label;
+    private String student_name;
 
     private long start_time;
 

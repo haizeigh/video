@@ -129,7 +129,7 @@ public class VideoMediaServiceImpl implements VideoMediaService {
 
         faceKeys.stream().forEach(faceKey -> {
 
-            String pic = redisUtils.getHash(faceKey, "pic").toString();
+            String pic = redisUtils.getHash(faceKey, DataConfig.PIC).toString();
             try {
 //                ImgTransitionUtil.base64ToFile(pic, task.getTaskTemptPath() + "/faces/" + faceKey + ".jpeg");
                 ImgTransitionUtil.base64ToFile(pic, path + "/" + faceKey + ".jpeg");
@@ -158,7 +158,7 @@ public class VideoMediaServiceImpl implements VideoMediaService {
             String[] keys = imageKeys.toString().split(",");
 
             Arrays.stream(keys).forEach(faceKey -> {
-                String pic = redisUtils.getHash(faceKey, "pic").toString();
+                String pic = redisUtils.getHash(faceKey, DataConfig.PIC).toString();
                 try {
 //                    ImgTransitionUtil.base64ToFile(pic, DataConfig.FACE_PIC_CACHE_PATH + "/" + base+"/" + faceKey.substring(faceKey.lastIndexOf("/") +1) + ".jpeg");
                     ImgTransitionUtil.base64ToFile(pic, task.getTaskTemptPath() + "/" + base+"/" + faceKey.substring(faceKey.lastIndexOf("/") +1) );
@@ -255,7 +255,7 @@ public class VideoMediaServiceImpl implements VideoMediaService {
             picCollection.forEach( picColle -> {
                 List<String> picsFromBucket = identifyContainerManager.getPicsFromBucket(picColle);
                 picsFromBucket.forEach(faceKey -> {
-                    String pic = redisUtils.getHash(faceKey, "pic").toString();
+                    String pic = redisUtils.getHash(faceKey, DataConfig.PIC).toString();
                     try {
                         ImgTransitionUtil.base64ToFile(pic, picCachePath + "/" + picColle+"/" + faceKey + ".jpeg");
                     } catch (Exception e) {
@@ -267,7 +267,7 @@ public class VideoMediaServiceImpl implements VideoMediaService {
     }
 
     @Override
-    public void readfacesCollesFromRedis(TaskDetailInfoDto task) {
+    public void readLabelPicCollesFromRedis(TaskDetailInfoDto task) {
 
 
             String labelPicCachePath = task.getTaskTemptPathForLabelCollection() ;
@@ -289,7 +289,7 @@ public class VideoMediaServiceImpl implements VideoMediaService {
 
                 List<String> picsFromBucket = identifyContainerManager.getPicsFromBucket(picColle);
                 picsFromBucket.forEach(faceKey -> {
-                    String pic = redisUtils.getHash(faceKey, "pic").toString();
+                    String pic = redisUtils.getHash(faceKey, DataConfig.PIC).toString();
                     try {
                         ImgTransitionUtil.base64ToFile(pic, labelPicCachePath + "/" + identify+"/" + faceKey + ".jpeg");
                     } catch (Exception e) {

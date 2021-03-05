@@ -52,7 +52,7 @@ public class VideoAsyncServiceImpl {
                 .append(":")
                 .append(task.getCameraInfoEntity().getCameraNo())
                 .append(":")
-                .append(task.getTaskEntity().getVideoStartTime().getTime() + milSec )
+                .append( (task.getTaskEntity().getVideoStartTime().getTime() + milSec) / 1000 )
                 .append(":")
                 .append(frameNum);
 

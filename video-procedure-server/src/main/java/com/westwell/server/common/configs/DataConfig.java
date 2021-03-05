@@ -12,7 +12,7 @@ public class DataConfig {
 //    视频开始时间
     public static String VIDEO_START_TIME = "2021-02-23 11:30:00";
 
-    public static String VIDEO_END_TIME = "2021-02-23 11:31:00";
+    public static String VIDEO_END_TIME = "2021-02-23 11:30:30";
 
     //    一段视频切分的间隔
     public static int INTERVAL_MINUTE = 60;
@@ -48,11 +48,16 @@ public class DataConfig {
 
     public static double MIN_IOU = 0.05;
 
+    public static double STUDENT_SIMILARITY = 0.6;
+
 //    比对底库的频率
     public static int INTER_FRE = 1;
 
 //    代表学生身份的field
     public static String STUDENT_ID = "student_id";
+
+    //   redis中保存图片的字段field
+    public static String PIC = "bigPic";
 
 //    保存输出文件的地址
     public static String IDENTIFY_CACHE_PATH = "/home/westwell/java/file/identify";
@@ -62,8 +67,7 @@ public class DataConfig {
 //    redis的location字段 保存坐标
     public static String LOCATION = "location";
 
-    //    redis的pic字段 保存图片
-    public static String PIC = "pic";
+
 
 
     public static void main(String[] args) {

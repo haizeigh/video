@@ -22,9 +22,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.Future;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -66,8 +64,8 @@ public class VideoProcessServiceImpl implements VideoProcessService {
         try {
 
             // todo 测试
-            Set<String> keys = redisTemplate.keys("*");
-            keys.stream().forEach(key -> redisUtils.delete(key));
+//            Set<String> keys = redisTemplate.keys("*");
+//            keys.stream().forEach(key -> redisUtils.delete(key));
 //            初始化任务
             task = wcTaskService.getOneTaskDetailInfoDto(taskNo, cameraNo, videoStartTime, videoEndTime);
 
@@ -80,7 +78,8 @@ public class VideoProcessServiceImpl implements VideoProcessService {
 //            }
 
             // todo 测试
-            task.setVideoFullPath("/home/westwell/java/data/video/D03_20210104112956.mp4");
+//            task.setVideoFullPath("/home/westwell/java/data/video/D03_20210104112956.mp4");
+            task.setVideoFullPath("/home/westwell/java/data/video/D03_20210104110141.mp4");
             boolean cutVideoToPics = videoMediaService.cutVideoToPics(task);
             if (!cutVideoToPics) {
                 throw new VPException("ffmpeg 截图出错");
@@ -92,7 +91,7 @@ public class VideoProcessServiceImpl implements VideoProcessService {
 
             List<String> faces = identifyFaces(task, picKeyList);
             //body的识别依赖于face，不方便改为异步
-//            List<String> bodies = identifyBodies(task, picKeyList);
+            List<String> bodies = identifyBodies(task, picKeyList);
 
 
         } catch (Exception e) {
@@ -127,14 +126,14 @@ public class VideoProcessServiceImpl implements VideoProcessService {
 
         task.setBodies(bodyKeyList);
         TaskDetailInfoDto taskDetailInfoDto = new TaskDetailInfoDto();
-        BeanUtils.copyProperties(task, taskDetailInfoDto);
+        BeanUtils.copyProperties(task, taskDetailInfoDto, "taskCameraPrefix");
         taskDetailInfoDto.setTaskType(TaskDetailInfoDto.TaskType.BODY);
         task = taskDetailInfoDto;
 
         log.info("输出每一帧的body图");
         videoMediaService.readPicsFromRedis(task, bodyKeyList, task.getTaskTemptPathForBody());
 
-//            保存面部图
+//            保存body图
         detectionService.storePicFrames(task, bodyKeyList);
 
 //            特征提取
@@ -158,8 +157,7 @@ public class VideoProcessServiceImpl implements VideoProcessService {
             return null;
         }
 
-        //todo 测试
-        faceKeyList = faceKeyList.stream().filter(faceKey -> !faceKey.contains("null")).collect(Collectors.toList());
+        log.info("检测的face={}", faceKeyList);
 
         task.setFaces(faceKeyList);
         TaskDetailInfoDto taskDetailInfoDto = new TaskDetailInfoDto();
@@ -188,21 +186,25 @@ public class VideoProcessServiceImpl implements VideoProcessService {
     }
 
     public void clearVideoCache(TaskDetailInfoDto task) {
-        //todo 清理任务
-        log.info("格式化单次任务no={}", task.getTaskEntity().getTaskNo());
+
+        for (TaskDetailInfoDto.TaskType taskType : TaskDetailInfoDto.TaskType.values()) {
+
+            task.setTaskType(taskType);
+            log.info("格式化单次任务no={}, 类型{}", task.getTaskEntity().getTaskNo(), task.getTaskType());
 //        本地图片 redis原图 redis小图 redis小图集合 本地帧集合 本地容器
-        VideoContainer videoContainer = identifyContainerManager.getVideoContainerMap().get(task.getTaskCameraPrefix());
-        if (videoContainer == null){
-            return;
+            VideoContainer videoContainer = identifyContainerManager.getVideoContainerMap().get(task.getTaskCameraPrefix());
+            if (videoContainer == null){
+                return;
+            }
+
+            List<String> sortedPicKeys = identifyContainerManager.getSortedPicKeys(task);
+            videoMediaService.clearListInRedis(sortedPicKeys);
+
+            List<String> list = identifyContainerManager.picColleKeys(task);
+            videoMediaService.clearListInRedis(list);
+            identifyContainerManager.getVideoContainerMap().remove(task.getTaskCameraPrefix());
         }
 
-
-        List<String> sortedFaceKeys = identifyContainerManager.getSortedFaceKeys(task);
-        videoMediaService.clearListInRedis(sortedFaceKeys);
-
-        List<String> list = identifyContainerManager.picColleKeys(task);
-        videoMediaService.clearListInRedis(list);
-        identifyContainerManager.getVideoContainerMap().remove(task.getTaskCameraPrefix());
 
     }
 

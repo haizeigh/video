@@ -44,7 +44,7 @@ public class FeatureServiceImpl implements FeatureService {
 
     @Override
     public boolean extractBodyFeature(List<String> picKeys) {
-        log.info("提取body特征的图片数目{}", picKeys.size());
+        log.info("提取body特征的图片数目{}, 第一个{}", picKeys.size(), picKeys.get(0));
 
         BodyPicsInRedisRequest.Builder builder = BodyPicsInRedisRequest.newBuilder();
         builder.addAllPicKeys(picKeys);
@@ -119,7 +119,15 @@ public class FeatureServiceImpl implements FeatureService {
         if (CollectionUtils.isEmpty(colleWithStudentResultsList)){
             return null;
         }
-        return colleWithStudentResultsList.get(0).split("\\|")[1];
+        String[] split = colleWithStudentResultsList.get(0).split("\\|");
+        double similarity = Double.parseDouble(split[2]);
+        String colleKey = split[1];
+        if (similarity < DataConfig.STUDENT_SIMILARITY){
+//            不达到阈值
+            return null;
+        }
+
+        return colleKey;
     }
 
 

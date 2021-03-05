@@ -96,15 +96,15 @@ public class IdentifyContainerManager {
     }
 
 //    查找所有排序的帧
-    public  List<String> getSortedFaceKeys(TaskDetailInfoDto task){
+    public  List<String> getSortedPicKeys(TaskDetailInfoDto task){
 
         VideoContainer videoContainer = videoContainerMap.get(task.getTaskCameraPrefix());
         if (videoContainer == null){
             return null;
         }
-        List<String> faces = videoContainer.getAllFrame();
-        Collections.sort(faces);
-        return faces;
+        List<String> pics = videoContainer.getAllFrame();
+        Collections.sort(pics);
+        return pics;
     }
 
     public  void addPicFrameKeys(List<String> picKeys, TaskDetailInfoDto task){

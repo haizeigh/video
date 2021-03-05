@@ -36,20 +36,23 @@ public class ResultDumpServiceImpl implements ResultDumpService {
 
     @Override
     public void dumpFrameResult(TaskDetailInfoDto task, String textPath) throws Exception {
-        List<String> sortedFaceKeys = identifyContainerManager.getSortedFaceKeys(task);
-        if (CollectionUtils.isEmpty(sortedFaceKeys)){
+
+        List<String> sortedPicKeys = identifyContainerManager.getSortedPicKeys(task);
+        if (CollectionUtils.isEmpty(sortedPicKeys)){
             log.info("任务no={}没有帧数据",task.getTaskEntity().getTaskNo() );
             return;
         }
         String taskNo = task.getTaskEntity().getTaskNo().toString();
         String cameraNo = task.getTaskEntity().getCameraNo().toString();
 
-        String mapKey = "task_no,camera_no,pic_time,frame_no,location,pic,feature,student_id,student_name";
+//        String mapKey = "task_no,camera_no,pic_time,frame_no,location,pic,feature,student_id,student_name";
+        String mapKey = "task_no,camera_no,pic_time,frame_no,location,student_id,student_name";
         List<Map<String, String>> dataList = new ArrayList<>();
-        for (String faceKey : sortedFaceKeys) {
+        for (String faceKey : sortedPicKeys) {
 
-//            BeanUtils.copyProperties(map, redisUtils.getHash(faceKey));
-            Map<String, Object> hash = redisUtils.getHash(faceKey);
+            String location = redisUtils.getHash(faceKey, DataConfig.LOCATION).toString();
+            String studentId = redisUtils.getHash(faceKey, DataConfig.STUDENT_ID).toString();
+
             Map<String, String> map = new HashedMap();
             redisUtils.getHash(faceKey).forEach((k, v) -> map.put(k, v.toString()));
 
@@ -57,9 +60,11 @@ public class ResultDumpServiceImpl implements ResultDumpService {
 
             map.put("task_no", taskNo);
             map.put("camera_no", cameraNo);
-            map.put("pic_time", split[split.length - 3]);
-            map.put("frame_no", split[split.length - 2]);
-            //todo 少属性
+            map.put("pic_time", split[3]);
+            map.put("frame_no", split[4]);
+
+            map.put("location", location);
+            map.put("student_id", studentId);
             dataList.add(map);
         }
 
@@ -99,38 +104,63 @@ public class ResultDumpServiceImpl implements ResultDumpService {
         List<TaskFinalResultDto> dataList = new ArrayList<>();
         String mapKey = "task_no,camera_no,student_id,student_name,start_time,end_time,locations";
 
-        identifyMap.forEach( ( faceColleKey, studentId ) -> {
-//            遍历所有人
-            List<String> faceKeys = identifyContainerManager.getPicsFromBucket(faceColleKey);
-            Collections.sort(faceKeys);
+        Map<String, List<String>> studentyMap = new HashedMap();
+//        根据学生分组
+        identifyMap.forEach( ( picColleKey, studentId ) -> {
+
+            List<String> colleKeyList = studentyMap.get(studentId);
+            if (CollectionUtils.isEmpty(colleKeyList)){
+                colleKeyList = new ArrayList<>();
+                colleKeyList.add(picColleKey);
+                studentyMap.put(studentId, colleKeyList);
+                return;
+            }
+            colleKeyList.add(picColleKey);
+
+        } );
+
+        studentyMap.forEach( ( studentId, colleKeyList ) -> {
+            //            遍历所有人
+            colleKeyList.stream().forEach(picColleKey -> {
+
+                List<String> picKeys = identifyContainerManager.getPicsFromBucket(picColleKey);
+                Collections.sort(picKeys);
 
 //            遍历所有小图
-            faceKeys.forEach(faceKey -> {
+                picKeys.forEach(picKey -> {
 
-                String[] split = faceKey.split(":");
-                String location = redisUtils.getHash(faceKey, "location").toString();
-                String thisStudentId = redisUtils.getHash(faceKey, DataConfig.STUDENT_ID).toString();
-                long faceSec = Long.parseLong(split[split.length - 3]) / 1000;
+                    String[] split = picKey.split(":");
+                    String location = redisUtils.getHash(picKey, "location").toString();
+                    String thisStudentId = studentId;
+                    long picSec = Long.parseLong(split[3]);
+                    int frameNum = Integer.parseInt(split[4]);
 
 //                初始化
-                if (CollectionUtils.isEmpty(dataList)){
-                    insertFinalResult(taskNo, cameraNo, dataList, location, thisStudentId, faceSec);
-                    return;
-                }
-                TaskFinalResultDto lastTaskFinalResultDto = dataList.get(dataList.size() - 1);
+                    if (CollectionUtils.isEmpty(dataList)){
+                        insertFinalResult(taskNo, cameraNo, dataList, location, thisStudentId, picSec);
+                        return;
+                    }
+                    TaskFinalResultDto lastTaskFinalResultDto = dataList.get(dataList.size() - 1);
 
-//               和前一个对比 小于间隔的话整合
-                if (lastTaskFinalResultDto != null
-                        && lastTaskFinalResultDto.getStudent_id().equals(thisStudentId)
-                        && faceSec - lastTaskFinalResultDto.getEnd_time() < 300 ){
-                    lastTaskFinalResultDto.setEnd_time(faceSec);
-                    lastTaskFinalResultDto.getLocations().add(location);
-                }else {
+//               和前一个对比 整合
+                    if (
+                            lastTaskFinalResultDto.getStudent_id().equals(thisStudentId)
+                            && picSec - lastTaskFinalResultDto.getEnd_time() > 0
+                    ){
+                        lastTaskFinalResultDto.setEnd_time(picSec);
+                        lastTaskFinalResultDto.getLocations().add(location);
+                    }else if (
+                            lastTaskFinalResultDto.getStudent_id().equals(thisStudentId)
+                                    && picSec - lastTaskFinalResultDto.getEnd_time() <= 0
+                    ){
+                        log.info("同一个人的位置信息，在一秒内的数据不再整合");
+                    }else {
 //                    新插入数据
-                    insertFinalResult(taskNo, cameraNo, dataList, location, thisStudentId, faceSec);
-                }
-            });
-        } );
+                        insertFinalResult(taskNo, cameraNo, dataList, location, thisStudentId, picSec);
+                    }
+                });
+            } );
+        });
 
 
         File file = new File(textPath);

@@ -23,5 +23,5 @@ public interface VideoMediaService {
     //    下载视频
     boolean readVideo(TaskDetailInfoDto task);
 
-    void readfacesCollesFromRedis(TaskDetailInfoDto task);
+    void readLabelPicCollesFromRedis(TaskDetailInfoDto task);
 }

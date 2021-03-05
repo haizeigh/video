@@ -25,7 +25,6 @@ public class TaskDetailInfoDto {
 
     private List<String> bodies;
 
-    private String taskCameraPrefix;
 
     private TaskType taskType;
 
@@ -46,9 +45,6 @@ public class TaskDetailInfoDto {
 
     public String getTaskCameraPrefix(){
 
-        if (!Strings.isNullOrEmpty(taskCameraPrefix)){
-            return taskCameraPrefix;
-        }
         StringBuilder stringBuilder = new StringBuilder();
         String taskCamera = stringBuilder.append(DataConfig.TASK_PREFIX)
                 .append(":")
@@ -56,7 +52,6 @@ public class TaskDetailInfoDto {
                 .append(":")
                 .append(taskEntity.getCameraNo())
                 .append(taskType.getCode()).toString();
-        this.taskCameraPrefix = taskCamera;
         return taskCamera;
     }
 
