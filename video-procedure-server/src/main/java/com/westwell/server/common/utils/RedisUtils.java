@@ -90,6 +90,10 @@ public class RedisUtils {
         return hashOperations.get(key, field);
     }
 
+    public List<Object> multiGetHash(String key, List<String> field){
+        return hashOperations.multiGet(key, field);
+    }
+
     public Map<String,Object> getHash(String key){
         return hashOperations.entries(key);
     }

@@ -22,7 +22,7 @@ public class VideoContainer {
     private Map<String, String> identifyMap = new ConcurrentHashMap<>(DataConfig.CLUSTER_NUM * 2);
 //    临时底库
     private List<String> picCollection = new CopyOnWriteArrayList<>();
-//    堆栈限制计数
+//    堆限制计数
     private AtomicInteger clusterCount = new AtomicInteger(0);
     //    全部的帧
     private  List<String> allFrame = new CopyOnWriteArrayList<>();

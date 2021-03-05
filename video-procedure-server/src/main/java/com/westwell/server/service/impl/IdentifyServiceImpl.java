@@ -75,7 +75,7 @@ public class IdentifyServiceImpl implements IdentifyService {
                     && identifyContainerManager.containsKey(tempPicColleKey, task)
                     && !Strings.isNullOrEmpty(identifyContainerManager.getIdentify(tempPicColleKey, task))) {
                 String identify = identifyContainerManager.getIdentify(tempPicColleKey, task);
-                log.debug("find the student" + identify);
+                log.info("{}find the student={}" , picKey,  identify);
                 redisUtils.putHash(picKey, DataConfig.STUDENT_ID, identify);
             }
 

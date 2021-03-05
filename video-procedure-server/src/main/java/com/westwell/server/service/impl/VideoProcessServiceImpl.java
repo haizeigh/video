@@ -89,9 +89,9 @@ public class VideoProcessServiceImpl implements VideoProcessService {
             log.info("原图保存redis...");
             picKeyList = videoMediaService.writePicsToRedis(task);
 
-            List<String> faces = identifyFaces(task, picKeyList);
+            identifyFaces(task, picKeyList);
             //body的识别依赖于face，不方便改为异步
-            List<String> bodies = identifyBodies(task, picKeyList);
+            identifyBodies(task, picKeyList);
 
 
         } catch (Exception e) {

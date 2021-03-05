@@ -92,7 +92,7 @@ public class IdentifyContainerManager {
 
     public  boolean containsKey(String faceColleKey, TaskDetailInfoDto task) {
         VideoContainer videoContainer = videoContainerMap.get(task.getTaskCameraPrefix());
-        return videoContainer.getPicCollection().indexOf(faceColleKey) > 0;
+        return videoContainer.getPicCollection().contains(faceColleKey);
     }
 
 //    查找所有排序的帧

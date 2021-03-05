@@ -6,7 +6,6 @@ import com.westwell.server.common.utils.LocationUtil;
 import com.westwell.server.common.utils.RedisUtils;
 import com.westwell.server.container.IdentifyContainerManager;
 import com.westwell.server.container.VideoContainer;
-import com.westwell.server.dto.CompareSimilarityDto;
 import com.westwell.server.dto.TaskDetailInfoDto;
 import com.westwell.server.service.FeatureService;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +40,7 @@ public class FaceCollectionListener {
         log.info("colleKey={} Collection change", colleKey);
         if (!Strings.isNullOrEmpty(identifyContainerManager.getIdentify(colleKey, task))) {
             log.info("has identify, ignore it ");
+            return;
         }
 
         List<String> colleValue = identifyContainerManager.getPicsFromBucket(colleKey);
@@ -50,6 +50,7 @@ public class FaceCollectionListener {
                 log.info("compare face Collection");
                 String studentId = featureService.compareCollectionWithStudent(colleKey);
                 if (Strings.isNullOrEmpty(studentId)) {
+                    log.info("compare face Collection {} 无结果", colleKey);
                     return;
                 }
                 identifyContainerManager.addIdentify(colleKey, studentId, task);
@@ -82,41 +83,42 @@ public class FaceCollectionListener {
 
                 Optional<Double> bigIOU = iouList.stream().filter(iou -> iou > DataConfig.MIN_IOU).max((i1, i2) -> (int) (i1 - i2));
                 if (!bigIOU.isPresent()) {
-                    log.info("当前任务id={}，body{}查找faces{},计算iou{}，阈值{}，没有找到body和face的关系",
+                    log.info("当前任务id={}，body={}查找faces{},计算iou{}，阈值{}，没有找到body和face的关系",
                             task.getTaskEntity().getId(), picKey, frameFaces, iouList, DataConfig.MIN_IOU);
                     return;
                 }
 
                 int index = iouList.indexOf(bigIOU.get());
                 String rightFace = frameFaces.get(index);
-                log.info("当前任务id={}，body{}绑定了face{},计算的iou={}",
-                        task.getTaskEntity().getId(), picKey, rightFace, bigIOU.get());
+                log.info("当前任务id={}，body={}绑定了face={},计算的iou={}, 阈值={}",
+                        task.getTaskEntity().getId(), picKey, rightFace, bigIOU.get(), DataConfig.MIN_IOU);
 
                 String facePicColleKey = checkPicColle(task, TaskDetailInfoDto.TaskType.FACE, rightFace);
                 if (Strings.isNullOrEmpty(facePicColleKey)) {
-                    log.info("当前任务id={}，face{}找不到对应集合", task.getTaskEntity().getId(), rightFace);
+                    log.info("当前任务id={}，face={}找不到对应集合", task.getTaskEntity().getId(), rightFace);
                     return;
                 }
                 VideoContainer faceVideoContainer = identifyContainerManager.getVideoContainerByType(task, TaskDetailInfoDto.TaskType.FACE);
                 String student = faceVideoContainer.getIdentifyMap().get(facePicColleKey);
                 if (Strings.isNullOrEmpty(student)) {
-                    log.info("当前任务id={}，facePicColleKey{}找不到对应学生", task.getTaskEntity().getId(), facePicColleKey);
+                    log.info("当前任务id={}，facePicColleKey={}找不到对应学生", task.getTaskEntity().getId(), facePicColleKey);
                     return;
                 }
 
-                String bodyPicColleKey = checkPicColle(task, TaskDetailInfoDto.TaskType.BODY, picKey);
+                String bodyPicColleKey = colleKey;
                 if (Strings.isNullOrEmpty(bodyPicColleKey)) {
-                    log.info("当前任务id={}，body{}找不到对应集合", task.getTaskEntity().getId(), picKey);
+                    log.info("当前任务id={}，body={}找不到对应集合", task.getTaskEntity().getId(), picKey);
                     return;
                 }
                 identifyContainerManager.addBodyColleAndFaceColleRelation(task, bodyPicColleKey, facePicColleKey);
 
 //            这里校验是不是已经存在关系
                 String studentIdentify = identifyContainerManager.getIdentify(bodyPicColleKey, task);
-                log.info("当前任务id={}, type={}，bodyPicColleKey{}查询学生结果{}",
-                        task.getTaskEntity().getId(), task.getTaskType(), bodyPicColleKey, studentIdentify);
                 if (Strings.isNullOrEmpty(studentIdentify)) {
+                    log.info("当前任务id={}, type={}，为bodyPicColleKey={}增加学生标记{}",
+                            task.getTaskEntity().getId(), task.getTaskType(), bodyPicColleKey, student);
                     identifyContainerManager.addIdentify(bodyPicColleKey, student, task);
+                    colleValue.stream().forEach(faceKey -> redisUtils.putHash(faceKey, DataConfig.STUDENT_ID, student));
                 }
 
             }
@@ -127,14 +129,23 @@ public class FaceCollectionListener {
 
     }
 
+
+
     private String checkPicColle(TaskDetailInfoDto task, TaskDetailInfoDto.TaskType taskType, String picKey) throws Exception {
-        TaskDetailInfoDto.TaskType originalTaskType = task.getTaskType();
-        task.setTaskType(taskType);
-        CompareSimilarityDto faceCompareSimilarityDto = featureService.compareFaceWithCollection(task, picKey);
-        String picColleKey = faceCompareSimilarityDto.getPicColleKey();
-        task.setTaskType(originalTaskType);
-        log.info("当前任务id={}，类别{},pic{}查找集合,结果{}",
-                task.getTaskEntity().getId(), taskType, picKey, faceCompareSimilarityDto);
-        return picColleKey;
+
+        VideoContainer videoContainerByType = identifyContainerManager.getVideoContainerByType(task, taskType);
+        List<String> picCollection = videoContainerByType.getPicCollection();
+        for (String picColle : picCollection) {
+            List<String> picsFromBucket = identifyContainerManager.getPicsFromBucket(picColle);
+            if (CollectionUtils.isNotEmpty(picsFromBucket) && picsFromBucket.contains(picKey)){
+                log.info("当前任务id={}，类别{},pic={}查找集合,结果={}",
+                        task.getTaskEntity().getId(), taskType, picKey, picColle);
+                return picColle;
+            }
+
+        }
+        log.info("当前任务id={}，类别{},pic={}查找不到集合",task.getTaskEntity().getId(), taskType, picKey);
+        return null;
+
     }
 }

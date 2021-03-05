@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.io.File;
+import java.text.DecimalFormat;
 import java.util.concurrent.Future;
 
 @Service
@@ -18,6 +19,8 @@ public class VideoAsyncServiceImpl {
 
     @Resource
     RedisUtils redisUtils;
+
+    private final  DecimalFormat df = new DecimalFormat("00");
 
     @Async("taskExecutor")
     public Future<String> writePicsToRedis(TaskDetailInfoDto task, File image) throws Exception {
@@ -54,7 +57,7 @@ public class VideoAsyncServiceImpl {
                 .append(":")
                 .append( (task.getTaskEntity().getVideoStartTime().getTime() + milSec) / 1000 )
                 .append(":")
-                .append(frameNum);
+                .append(df.format(frameNum));
 
         String newImageName = stringBuilder.toString();
 //        System.out.println(image.getParent() + "/" + newImageName);
@@ -69,5 +72,8 @@ public class VideoAsyncServiceImpl {
 
         File file = new File("/home/westwell/java/file/identify/2021-03-04/1-38/113000-113100/pic/000000006.jpeg");
         System.out.println(file.getParent());
+
+        DecimalFormat df = new DecimalFormat("00");
+        System.out.println(df.format(2));
     }
 }

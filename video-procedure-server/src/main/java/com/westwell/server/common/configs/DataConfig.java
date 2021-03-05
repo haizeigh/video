@@ -46,7 +46,7 @@ public class DataConfig {
 
     public static double MIN_SIMILARITY = 0.6;
 
-    public static double MIN_IOU = 0.05;
+    public static double MIN_IOU = 0.04;
 
     public static double STUDENT_SIMILARITY = 0.6;
 
@@ -57,7 +57,7 @@ public class DataConfig {
     public static String STUDENT_ID = "student_id";
 
     //   redis中保存图片的字段field
-    public static String PIC = "bigPic";
+    public static String PIC = "pic";
 
 //    保存输出文件的地址
     public static String IDENTIFY_CACHE_PATH = "/home/westwell/java/file/identify";

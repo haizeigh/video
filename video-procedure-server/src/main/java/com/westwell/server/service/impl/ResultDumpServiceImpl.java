@@ -1,5 +1,6 @@
 package com.westwell.server.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.westwell.server.common.configs.DataConfig;
 import com.westwell.server.common.utils.ExportUtil;
 import com.westwell.server.common.utils.RedisUtils;
@@ -19,6 +20,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -46,17 +48,22 @@ public class ResultDumpServiceImpl implements ResultDumpService {
         String cameraNo = task.getTaskEntity().getCameraNo().toString();
 
 //        String mapKey = "task_no,camera_no,pic_time,frame_no,location,pic,feature,student_id,student_name";
-        String mapKey = "task_no,camera_no,pic_time,frame_no,location,student_id,student_name";
+        String mapKey = "task_no,camera_no,pic_time,frame_no,location,student_id,student_name,picKey";
         List<Map<String, String>> dataList = new ArrayList<>();
-        for (String faceKey : sortedPicKeys) {
+        List<String> queryList = new ArrayList<>();
+        queryList.add(DataConfig.LOCATION);
+        queryList.add(DataConfig.STUDENT_ID);
 
-            String location = redisUtils.getHash(faceKey, DataConfig.LOCATION).toString();
-            String studentId = redisUtils.getHash(faceKey, DataConfig.STUDENT_ID).toString();
+        for (String picKey : sortedPicKeys) {
+
+            List<Object> queryListObjects = redisUtils.multiGetHash(picKey, queryList);
+            String location = queryListObjects.get(0).toString();
+            String studentId = queryListObjects.get(1) == null ? null : queryListObjects.get(1).toString() ;
 
             Map<String, String> map = new HashedMap();
-            redisUtils.getHash(faceKey).forEach((k, v) -> map.put(k, v.toString()));
+            redisUtils.getHash(picKey).forEach((k, v) -> map.put(k, v.toString()));
 
-            String[] split = faceKey.split(":");
+            String[] split = picKey.split(":");
 
             map.put("task_no", taskNo);
             map.put("camera_no", cameraNo);
@@ -65,6 +72,7 @@ public class ResultDumpServiceImpl implements ResultDumpService {
 
             map.put("location", location);
             map.put("student_id", studentId);
+            map.put("picKey", picKey);
             dataList.add(map);
         }
 
@@ -171,6 +179,7 @@ public class ResultDumpServiceImpl implements ResultDumpService {
         List<Map<String, String>> collect = new ArrayList<>();
         for (TaskFinalResultDto taskFinalResultDto : dataList) {
             Map<String, String> describe = BeanUtils.describe(taskFinalResultDto);
+            describe.put("locations", JSON.toJSONString(taskFinalResultDto.getLocations()));
             collect.add(describe);
         }
 
@@ -193,4 +202,20 @@ public class ResultDumpServiceImpl implements ResultDumpService {
                 .locations(locations).build();
         dataList.add(taskFinalResultDto);
     }
+
+    public static void main(String[] args) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+
+        TaskFinalResultDto taskFinalResultDto = new TaskFinalResultDto();
+        List<String> locations = new ArrayList<>();
+        locations.add("location1");
+        locations.add("location2");
+        taskFinalResultDto.setLocations(locations);
+
+        Map<String, String> describe = BeanUtils.describe(taskFinalResultDto);
+        describe.put("locations", JSON.toJSONString(taskFinalResultDto.getLocations()));
+
+        System.out.println(JSON.toJSONString(describe));
+    }
+
 }
+
