@@ -91,6 +91,8 @@ public class WcVideoManagerServiceImpl implements WcVideoManagerService {
                 resultDumpService.dumpFrameResult(fistTask, textPath);
                 resultDumpService.dumpTaskFinalResult(fistTask, textPath);
 
+                resultDumpService.dumpTaskTemptResult(fistTask, textPath);
+
             } catch (Exception e) {
                 log.error("任务{}导出文件出错", fistTask, e);
                 flag = false;

@@ -37,12 +37,13 @@ public class DataConfig {
     public static String TASK_PREFIX = "wellcare";
 
     public static String SUCCESS = "success";
+    public static int SUCCESS_CODE = 0;
 
 //    图像分辨率
     public static String PIXELS = "2048x1536";
 
 //    人物相似度的阀值
-    public static double MAX_SIMILARITY = 0.9;
+    public static double MAX_SIMILARITY = 0.67;
 
     public static double MIN_SIMILARITY = 0.6;
 

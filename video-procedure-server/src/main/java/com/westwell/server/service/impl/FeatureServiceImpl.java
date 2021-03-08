@@ -10,6 +10,7 @@ import com.westwell.server.container.IdentifyContainerManager;
 import com.westwell.server.dto.CompareSimilarityDto;
 import com.westwell.server.dto.TaskDetailInfoDto;
 import com.westwell.server.service.FeatureService;
+import com.westwell.server.service.base.RpcBaseInspectService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.map.HashedMap;
@@ -21,7 +22,7 @@ import java.util.*;
 
 @Slf4j
 @Service
-public class FeatureServiceImpl implements FeatureService {
+public class FeatureServiceImpl extends RpcBaseInspectService implements FeatureService {
 
     @Resource
     FeatureServiceGrpc.FeatureServiceBlockingStub featureServiceBlockingStub;
@@ -65,6 +66,10 @@ public class FeatureServiceImpl implements FeatureService {
 //        log.info("特征比对{}， 集合{}", faceKey, picCollesList);
 
         ContrastPicWithCollesResponse contrastPicWithCollesResponse = featureServiceBlockingStub.contrastPicWithCollesInRedis(build);
+        int code = contrastPicWithCollesResponse.getCode();
+        String msg = contrastPicWithCollesResponse.getMsg();
+        checkInterface("face对比1：N", code, msg);
+
         List<Double> similarityListForQuery = contrastPicWithCollesResponse.getSimilarityOrderedListList();
         log.info("特征比对{}， 集合{}, 结果{}", faceKey, picCollesList, similarityListForQuery);
 
@@ -83,6 +88,11 @@ public class FeatureServiceImpl implements FeatureService {
 //        log.info("特征比对{}， 集合{}", faceKey, picCollesList);
 
         com.westwell.api.wellcare.body.ContrastPicWithCollesResponse contrastPicWithCollesResponse = bodyFeatureServiceBlockingStub.comparePicBodyWithCollesInRedis(build);
+        int code = contrastPicWithCollesResponse.getCode();
+        String msg = contrastPicWithCollesResponse.getMsg();
+        checkInterface("body对比1：N", code, msg);
+
+
         List<Double> similarityListForQuery = contrastPicWithCollesResponse.getSimilarityOrderedListList();
         log.info("特征比对{}， 集合{}, 结果{}", bodyKey, picCollesList, similarityListForQuery);
 
@@ -113,6 +123,10 @@ public class FeatureServiceImpl implements FeatureService {
                 .build();
         ContrastCollesWithBaseInfoResponse contrastCollesWithBaseInfoResponse =
                 featureServiceBlockingStub.contrastCollesWithBaseInfoInRedis(build);
+        int code = contrastCollesWithBaseInfoResponse.getCode();
+        String msg = contrastCollesWithBaseInfoResponse.getMsg();
+        checkInterface("face对比N：M", code, msg);
+
 
         ProtocolStringList colleWithStudentResultsList = contrastCollesWithBaseInfoResponse.getColleWithStudentResultsList();
         log.info("集合{}，对比基础库的结果{}", faceColle, colleWithStudentResultsList);

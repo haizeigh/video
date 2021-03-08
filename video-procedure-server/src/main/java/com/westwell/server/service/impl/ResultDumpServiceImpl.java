@@ -5,6 +5,7 @@ import com.westwell.server.common.configs.DataConfig;
 import com.westwell.server.common.utils.ExportUtil;
 import com.westwell.server.common.utils.RedisUtils;
 import com.westwell.server.container.IdentifyContainerManager;
+import com.westwell.server.container.VideoContainer;
 import com.westwell.server.dto.TaskDetailInfoDto;
 import com.westwell.server.dto.TaskFinalResultDto;
 import com.westwell.server.service.ResultDumpService;
@@ -95,6 +96,77 @@ public class ResultDumpServiceImpl implements ResultDumpService {
     @Override
     public void dumpTaskTemptResult(TaskDetailInfoDto task, String textPath) {
 
+        Map<String, String> identifyMap = identifyContainerManager.getVideoIdentifyMap(task);
+        if (MapUtils.isEmpty(identifyMap)){
+            log.info("任务no={}没有推理数据, 无法导出特征临时底库",task.getTaskEntity().getTaskNo() );
+            return;
+        }
+        VideoContainer videoContainer = identifyContainerManager.getVideoContainer(task);
+
+        String taskNo = task.getTaskEntity().getTaskNo().toString();
+        String cameraNo = task.getTaskEntity().getCameraNo().toString();
+        String mapKey = "task_no,camera_no,pic_time,frame_no,location,student_id,student_name,picKey,pic";
+
+        Map<String, List<String>> studentyMap = new HashedMap();
+//        根据学生分组
+        identifyMap.forEach( ( picColleKey, studentId ) -> {
+
+            List<String> colleKeyList = studentyMap.get(studentId);
+            if (CollectionUtils.isEmpty(colleKeyList)){
+                colleKeyList = new ArrayList<>();
+
+                //去取特征集合
+                colleKeyList.add(videoContainer.getSpecialPicColleKey(picColleKey));
+                studentyMap.put(studentId, colleKeyList);
+                return;
+            }
+            colleKeyList.add(picColleKey);
+
+        } );
+        List<Map<String, String>> dataList = new ArrayList<>();
+
+        studentyMap.forEach( ( studentId, colleKeyList ) -> {
+            //            遍历所有人的特征底库
+            colleKeyList.stream().forEach(picColleKey -> {
+
+                List<String> picKeys = identifyContainerManager.getPicsFromBucket(picColleKey);
+                if (CollectionUtils.isEmpty(picKeys)){
+                    return;
+                }
+//            遍历所有小图
+                picKeys.forEach(picKey -> {
+
+                    String location = redisUtils.getHash(picKey, DataConfig.LOCATION).toString();
+                    Map<String, String> map = new HashedMap();
+
+                    String[] split = picKey.split(":");
+
+                    map.put("task_no", taskNo);
+                    map.put("camera_no", cameraNo);
+                    map.put("pic_time", split[3]);
+                    map.put("frame_no", split[4]);
+
+                    map.put("location", location);
+                    map.put("pic", task.getTaskTemptPathForLabelCollection());
+                    map.put("student_id", studentId);
+                    map.put("picKey", picKey);
+                    dataList.add(map);
+                });
+            } );
+        });
+
+        File file = new File(textPath);
+        if (!file.exists()){
+            file.mkdirs();
+        }
+
+        try {
+            OutputStream outputStream = new FileOutputStream(textPath+ "/" + "temp.csv");
+            ExportUtil.doExport(dataList, mapKey, outputStream);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
     }
 
     @Override
@@ -161,7 +233,7 @@ public class ResultDumpServiceImpl implements ResultDumpService {
                             lastTaskFinalResultDto.getStudent_id().equals(thisStudentId)
                                     && picSec - lastTaskFinalResultDto.getEnd_time() <= 0
                     ){
-                        log.info("同一个人的位置信息，在一秒内的数据不再整合");
+                        log.info("同一个人的位置信息，在一秒内的数据不再整合图片:{}", picKey);
                     }else {
 //                    新插入数据
                         insertFinalResult(taskNo, cameraNo, dataList, location, thisStudentId, picSec);

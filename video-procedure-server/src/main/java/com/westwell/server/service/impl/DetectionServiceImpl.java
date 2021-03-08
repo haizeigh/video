@@ -6,6 +6,7 @@ import com.westwell.api.PicsInRedisRequest;
 import com.westwell.server.container.IdentifyContainerManager;
 import com.westwell.server.dto.TaskDetailInfoDto;
 import com.westwell.server.service.DetectionService;
+import com.westwell.server.service.base.RpcBaseInspectService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +15,7 @@ import java.util.List;
 
 @Slf4j
 @Service
-public class DetectionServiceImpl implements DetectionService {
+public class DetectionServiceImpl extends RpcBaseInspectService implements DetectionService {
 
     @Resource
     IdentifyContainerManager identifyContainerManager;
@@ -31,6 +32,9 @@ public class DetectionServiceImpl implements DetectionService {
         builder.addAllPickeysReq(picKeys);
 
         DetectPicsInRedisResponse detectPicsInRedisResponse = detectionServiceBlockingStub.detectPicsInRedis(builder.build());
+        int code = detectPicsInRedisResponse.getCode();
+        String msg = detectPicsInRedisResponse.getMsg();
+        checkInterface("face检测", code, msg);
         return detectPicsInRedisResponse.getPickeysResList();
 
     }
@@ -48,6 +52,10 @@ public class DetectionServiceImpl implements DetectionService {
         builder.addAllPickeysReq(picKeyList);
 
         DetectPicsInRedisResponse detectPicsInRedisResponse = detectionServiceBlockingStub.detectPicsBodyInRedis(builder.build());
+        int code = detectPicsInRedisResponse.getCode();
+        String msg = detectPicsInRedisResponse.getMsg();
+        checkInterface("body检测", code, msg);
+
         return detectPicsInRedisResponse.getPickeysResList();
     }
 

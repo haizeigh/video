@@ -46,7 +46,8 @@ public class IdentifyContainerManager {
         return true;
     }
 
-    public  boolean addPicToNewBucket(String picKey, TaskDetailInfoDto task) {
+    //返回加入的集合名字
+    public  String  addPicToNewBucket(String picKey, TaskDetailInfoDto task) {
 
         String taskCameraPrefix = task.getTaskCameraPrefix();
         if (!videoContainerMap.containsKey(taskCameraPrefix)){
@@ -58,12 +59,26 @@ public class IdentifyContainerManager {
         String picColleKey = videoContainer.newBucketName(task);
         if (Strings.isNullOrEmpty(picColleKey)){
             log.warn("摄像任务{}不能创建新底库", taskCameraPrefix);
-            return false;
+            return null;
         }
 
-        videoContainer.getPicCollection().add(picColleKey);
-        return addPicToExistBucket( picKey, picColleKey, task);
+        videoContainer.addNormalPicCollection(picColleKey);
+        addPicToExistBucket( picKey, picColleKey, task);
+        return picColleKey;
     }
+
+    //加入存在的特征底库
+    public void addPicToSpecialBucket(String picKey, String picColleKey, TaskDetailInfoDto task){
+
+        String taskCameraPrefix = task.getTaskCameraPrefix();
+        //        获取容器
+        VideoContainer videoContainer = videoContainerMap.get(taskCameraPrefix);
+        String specialPicColleKey = videoContainer.getSpecialPicColleKey(picColleKey);
+
+        redisUtils.lPush(specialPicColleKey, picKey);
+
+    }
+
 
     public  List<String> getPicsFromBucket(String faceColleKey){
         return redisUtils.lGetAll(faceColleKey).stream().map(Object::toString).collect(Collectors.toList());
@@ -154,6 +169,11 @@ public class IdentifyContainerManager {
         task.setTaskType(taskType);
         VideoContainer videoContainer = videoContainerMap.get(task.getTaskCameraPrefix());
         task.setTaskType(originalTaskType);
+        return videoContainer;
+    }
+
+    public VideoContainer getVideoContainer(TaskDetailInfoDto task) {
+        VideoContainer videoContainer = videoContainerMap.get(task.getTaskCameraPrefix());
         return videoContainer;
     }
 

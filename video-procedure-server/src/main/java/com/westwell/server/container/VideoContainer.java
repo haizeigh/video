@@ -18,10 +18,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Data
 public class VideoContainer {
 
+
 //    身份信息
     private Map<String, String> identifyMap = new ConcurrentHashMap<>(DataConfig.CLUSTER_NUM * 2);
-//    临时底库
+
+//    临时完整底库，在clusterCount不限制的情况下，能保存所有的帧
     private List<String> picCollection = new CopyOnWriteArrayList<>();
+
+    //临时部分底库，在一个集合内，只保存特征明显的帧
+    private List<String> specialPicCollection = new CopyOnWriteArrayList<>();
+
 //    堆限制计数
     private AtomicInteger clusterCount = new AtomicInteger(0);
     //    全部的帧
@@ -29,6 +35,8 @@ public class VideoContainer {
 
 //    具有对应关系的 bodyColle -> FaceColle
     private Map<String, Set<String>> bodyColleAndFaceColleRelationMap = new ConcurrentHashMap<>(DataConfig.CLUSTER_NUM * 2);
+
+    final String subfix = ":spe";
 
     @Resource
     private ApplicationContext applicationContext;
@@ -42,6 +50,17 @@ public class VideoContainer {
         return new StringBuilder(task.getTaskCameraPrefix())
                 .append(":set:")
                 .append(clusterCount.incrementAndGet()).toString();
+    }
+
+    public void addNormalPicCollection(String picColle){
+        picCollection.add(picColle);
+        //写入一个对应的子集
+        specialPicCollection.add(picColle + subfix);
+    }
+
+    public String getSpecialPicColleKey(String picColle) {
+
+        return picColle + subfix;
     }
 
 

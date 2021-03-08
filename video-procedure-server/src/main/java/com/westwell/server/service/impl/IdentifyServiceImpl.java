@@ -98,6 +98,12 @@ public class IdentifyServiceImpl implements IdentifyService {
                 log.info(picKey + "创建新的底库");
                 identifyContainerManager.addPicToNewBucket(picKey, task);
             }
+
+            //判断加入特征底库 仅仅是刚相似
+            if ( !Strings.isNullOrEmpty(tempPicColleKey) && !compareSimilarityDto.isOverSimilarity() ){
+                identifyContainerManager.addPicToSpecialBucket(picKey, tempPicColleKey, task);
+            }
+
         }
         return true;
     }
