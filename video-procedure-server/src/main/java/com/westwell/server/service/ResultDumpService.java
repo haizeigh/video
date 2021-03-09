@@ -11,5 +11,5 @@ public interface ResultDumpService {
     void dumpTaskTemptResult(TaskDetailInfoDto task, String textPath);
 
 //    导出汇总结果
-    void dumpTaskFinalResult(TaskDetailInfoDto task, String textPath) throws Exception;
+    void dumpTaskSummaryResult(TaskDetailInfoDto task, String textPath) throws Exception;
 }

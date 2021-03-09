@@ -1,5 +1,6 @@
 package com.westwell.server.service.impl;
 
+import com.westwell.server.common.configs.DataConfig;
 import com.westwell.server.common.enums.TaskStatusEnum;
 import com.westwell.server.common.exception.VPException;
 import com.westwell.server.common.utils.RedisUtils;
@@ -79,7 +80,7 @@ public class VideoProcessServiceImpl implements VideoProcessService {
 
             // todo 测试
 //            task.setVideoFullPath("/home/westwell/java/data/video/D03_20210104112956.mp4");
-            task.setVideoFullPath("/home/westwell/java/data/video/D03_20210104110141.mp4");
+            task.setVideoFullPath(DataConfig.TEST_VIDEO);
             boolean cutVideoToPics = videoMediaService.cutVideoToPics(task);
             if (!cutVideoToPics) {
                 throw new VPException("ffmpeg 截图出错");

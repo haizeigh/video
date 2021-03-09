@@ -1,9 +1,12 @@
 package com.westwell.server.common.configs;
 
 import com.westwell.api.common.utils.DateUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.util.Date;
 
+@Component(value = "DataConfig")
 public class DataConfig {
 
 //    摄像头编号
@@ -20,18 +23,33 @@ public class DataConfig {
 //    一秒截图数
     public static Double FRAME = 0.2;
 
+    public static String DASH = "-";
 
-//    图片保存地址
-    public static String PIC_CACHE_PATH = "/home/westwell/java/file/pics";
-
-    //    图片保存地址
-    public static String FACE_PIC_CACHE_PATH = "/home/westwell/java/file/tempt";
 
 //    ffmpeg地址
-    public static String FFMPEG_PATH = "/usr/local/ffmpeg/bin/ffmpeg";
+    public static String FFMPEG_PATH;
+    @Value("${ffmpeg.path}")
+    public void setFFMPEG_PATH(String ffmpegPath) {
+        DataConfig.FFMPEG_PATH = ffmpegPath;
+    }
+
+
+    //    保存输出文件的地址
+    public static String IDENTIFY_CACHE_PATH ;
+    @Value("${identify.cache.path}")
+    public void setIDENTIFY_CACHE_PATH(String identifyCachePath) {
+        DataConfig.IDENTIFY_CACHE_PATH = identifyCachePath;
+    }
+
+    public static String TEST_VIDEO ;
+    @Value("${test.video}")
+    public void setTEST_VIDEO(String testVideo) {
+        DataConfig.TEST_VIDEO = testVideo;
+    }
+
 
 //    临时底库的群数目
-    public static Integer CLUSTER_NUM = 70;
+    public static Integer CLUSTER_NUM = 40;
 
 //    业务前缀
     public static String TASK_PREFIX = "wellcare";
@@ -60,8 +78,7 @@ public class DataConfig {
     //   redis中保存图片的字段field
     public static String PIC = "pic";
 
-//    保存输出文件的地址
-    public static String IDENTIFY_CACHE_PATH = "/home/westwell/java/file/identify";
+
 
     public static String WELL_CARE_BASE = "wellcare:base";
 

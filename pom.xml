@@ -391,6 +391,12 @@
             </activation>
         </profile>
         <profile>
+            <id>test</id>
+            <properties>
+                <profileActive>test</profileActive>
+            </properties>
+        </profile>
+        <profile>
             <id>prod</id>
             <properties>
                 <profileActive>prod</profileActive>

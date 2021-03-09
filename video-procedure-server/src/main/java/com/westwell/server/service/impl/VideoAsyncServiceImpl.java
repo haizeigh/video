@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.io.File;
 import java.text.DecimalFormat;
+import java.util.Date;
 import java.util.concurrent.Future;
 
 @Service
@@ -40,9 +41,12 @@ public class VideoAsyncServiceImpl {
 //        计算当前图的时间
         Double frame = Double.parseDouble(task.getTaskEntity().getFrame());
         long imageNum = Long.parseLong(image.getName().split("\\.")[0]);
-        long milSec = (long) ((imageNum - 1) / frame * 1000);
 
-//        计算图的帧序号
+//        图的绝对时间
+        long milSec = (long)(1000 / frame * (imageNum - 1));
+//        long milSec = (long) ((imageNum - 1) / frame * 1000);
+
+//        计算图 一秒内的帧序号
         long frameNum = imageNum  - (long)((imageNum - 1) / frame * frame);
 
 
@@ -55,7 +59,7 @@ public class VideoAsyncServiceImpl {
                 .append(":")
                 .append(task.getCameraInfoEntity().getCameraNo())
                 .append(":")
-                .append( (task.getTaskEntity().getVideoStartTime().getTime() + milSec) / 1000 )
+                .append( task.getTaskEntity().getVideoStartTime().getTime() + milSec )
                 .append(":")
                 .append(df.format(frameNum));
 
@@ -75,5 +79,7 @@ public class VideoAsyncServiceImpl {
 
         DecimalFormat df = new DecimalFormat("00");
         System.out.println(df.format(2));
+
+        System.out.println( (new Date().getTime() + 5000) + "" );
     }
 }

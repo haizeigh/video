@@ -89,12 +89,12 @@ public class WcVideoManagerServiceImpl implements WcVideoManagerService {
 
                 String textPath = fistTask.getTaskDumpPath();
                 resultDumpService.dumpFrameResult(fistTask, textPath);
-                resultDumpService.dumpTaskFinalResult(fistTask, textPath);
+                resultDumpService.dumpTaskSummaryResult(fistTask, textPath);
 
                 resultDumpService.dumpTaskTemptResult(fistTask, textPath);
 
             } catch (Exception e) {
-                log.error("任务{}导出文件出错", fistTask, e);
+                log.error("任务no = {}导出文件出错", fistTask.getTaskEntity().getTaskNo(), e);
                 flag = false;
 //                throw new VPException("视频解析或者导出文件出错", e);
             }/* finally {

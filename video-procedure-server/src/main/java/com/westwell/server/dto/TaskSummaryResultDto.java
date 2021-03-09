@@ -5,14 +5,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class TaskFinalResultDto {
+public class TaskSummaryResultDto {
 
+
+    private String no;
 
     private String task_no;
 
@@ -26,5 +26,9 @@ public class TaskFinalResultDto {
 
     private long end_time;
 
-    private List<String> locations;
+    private String video_day;
+
+    private String create_time;
+
+//    private List<String> locations;
 }
