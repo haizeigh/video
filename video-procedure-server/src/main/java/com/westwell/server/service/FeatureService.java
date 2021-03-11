@@ -21,7 +21,7 @@ public interface FeatureService {
     CompareSimilarityDto compareBodyWithCollection(TaskDetailInfoDto task, String bodyKey) throws Exception;
 
 //    rpc通知N:M人脸对比服务
-    String compareCollectionWithStudent(String faceColle);
+    String compareCollectionWithStudent(TaskDetailInfoDto task, String faceColle) throws Exception;
 
     //    rpc通知1:N人脸对比服务
     CompareSimilarityDto comparePicWithCollection(TaskDetailInfoDto task, String picKey) throws Exception;

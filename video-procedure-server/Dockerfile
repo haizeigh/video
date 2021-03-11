@@ -19,6 +19,10 @@ ENV TZ 'Asia/Shanghai'
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
+#ENV LANG C.UTF-8
+#ENV LANGUAGE zh_CN.UTF-8
+#ENV LC_ALL C.UTF-8
+#ENV TZ Asia/Shangha
 
 #ADD ./jdk1.8.0_171 /data/jdk1.8.0_171
 #java环境变量
@@ -29,4 +33,5 @@ ENV PATH $JAVA_HOME/bin:$JAVA_HOME/jre/bin:$PATH
 # 执行启动命令
 #ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
 #RUN bash -c 'touch app.jar'
-ENTRYPOINT ["java","-jar","app.jar"]
+EXPOSE 8085
+#ENTRYPOINT ["java","-Dfile.encoding=UTF8","-Dsun.jnu.encoding=UTF8","-jar","app.jar"]

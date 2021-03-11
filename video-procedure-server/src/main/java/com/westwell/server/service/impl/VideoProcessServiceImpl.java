@@ -203,6 +203,10 @@ public class VideoProcessServiceImpl implements VideoProcessService {
 
             List<String> list = identifyContainerManager.picColleKeys(task);
             videoMediaService.clearListInRedis(list);
+
+            List<String> specialPicCollection = videoContainer.getSpecialPicCollection();
+            videoMediaService.clearListInRedis(specialPicCollection);
+
             identifyContainerManager.getVideoContainerMap().remove(task.getTaskCameraPrefix());
         }
 

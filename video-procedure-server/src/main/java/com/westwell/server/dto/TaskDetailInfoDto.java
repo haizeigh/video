@@ -139,6 +139,16 @@ public class TaskDetailInfoDto {
         return getJobPath() + "/identify/"  + taskType;
     }
 
+    public String getCompareColleDebugPath() {
+
+        return getJobPath() + "/compareColle/"  + taskType;
+    }
+
+    public String getCompareStudentDebugPath() {
+
+        return getJobPath() + "/compareStudent/"  + taskType;
+    }
+
     public enum TaskType{
 
         FACE(":face", "面部识别"),

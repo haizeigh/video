@@ -48,7 +48,7 @@ public class FaceCollectionListener {
 
             if (colleValue.size() % DataConfig.INTER_FRE == 0 && task.getTaskType() == TaskDetailInfoDto.TaskType.FACE) {
                 log.info("compare face Collection");
-                String studentId = featureService.compareCollectionWithStudent(colleKey);
+                String studentId = featureService.compareCollectionWithStudent(task, colleKey);
                 if (Strings.isNullOrEmpty(studentId)) {
                     log.info("compare face Collection {} 无结果", colleKey);
                     return;

@@ -6,10 +6,12 @@ import com.westwell.api.*;
 import com.westwell.api.wellcare.body.BodyFeatureServiceGrpc;
 import com.westwell.api.wellcare.body.BodyPicsInRedisRequest;
 import com.westwell.server.common.configs.DataConfig;
+import com.westwell.server.common.utils.RedisUtils;
 import com.westwell.server.container.IdentifyContainerManager;
 import com.westwell.server.dto.CompareSimilarityDto;
 import com.westwell.server.dto.TaskDetailInfoDto;
 import com.westwell.server.service.FeatureService;
+import com.westwell.server.service.VideoMediaService;
 import com.westwell.server.service.base.RpcBaseInspectService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -33,6 +35,12 @@ public class FeatureServiceImpl extends RpcBaseInspectService implements Feature
 
     @Resource
     IdentifyContainerManager identifyContainerManager;
+
+    @Resource
+    RedisUtils redisUtils;
+
+    @Resource
+    VideoMediaService videoMediaService;
 
     @Override
     public boolean extractFaceFeature(List<String> picKeys) {
@@ -72,8 +80,23 @@ public class FeatureServiceImpl extends RpcBaseInspectService implements Feature
 
         List<Double> similarityListForQuery = contrastPicWithCollesResponse.getSimilarityOrderedListList();
         log.info("特征比对{}， 集合{}, 结果{}", faceKey, picCollesList, similarityListForQuery);
+        deugCompare(task, faceKey, picCollesList, similarityListForQuery);
 
         return compareSimilarity(picCollesList, similarityListForQuery);
+    }
+
+    private void deugCompare(TaskDetailInfoDto task, String faceKey, List<String> picCollesList, List<Double> similarityListForQuery) throws Exception {
+        if (DataConfig.DEBUG_FLAG){
+            String debugPath = task.getCompareColleDebugPath() + "/" + System.currentTimeMillis();
+            videoMediaService.readPicFromRedis(faceKey, debugPath);
+            for (int i = 0; i < similarityListForQuery.size(); i++) {
+                Double score = similarityListForQuery.get(i);
+                String picColle = picCollesList.get(i);
+                List<String> picsFromBucket = identifyContainerManager.getPicsFromBucket(picColle);
+                videoMediaService.readPicsFromRedis(task, picsFromBucket, debugPath +"/" + score );
+            }
+
+        }
     }
 
 
@@ -95,6 +118,7 @@ public class FeatureServiceImpl extends RpcBaseInspectService implements Feature
 
         List<Double> similarityListForQuery = contrastPicWithCollesResponse.getSimilarityOrderedListList();
         log.info("特征比对{}， 集合{}, 结果{}", bodyKey, picCollesList, similarityListForQuery);
+        deugCompare(task, bodyKey, picCollesList, similarityListForQuery);
 
         return compareSimilarity(picCollesList, similarityListForQuery);
     }
@@ -113,7 +137,7 @@ public class FeatureServiceImpl extends RpcBaseInspectService implements Feature
     }
 
     @Override
-    public String compareCollectionWithStudent(String faceColle) {
+    public String compareCollectionWithStudent(TaskDetailInfoDto task, String faceColle) throws Exception {
 
         ArrayList<String> faceColleList = new ArrayList<>();
         faceColleList.add(faceColle);
@@ -133,9 +157,18 @@ public class FeatureServiceImpl extends RpcBaseInspectService implements Feature
         if (CollectionUtils.isEmpty(colleWithStudentResultsList)){
             return null;
         }
-        String[] split = colleWithStudentResultsList.get(0).split("\\|");
+
+        String result = colleWithStudentResultsList.get(0);
+        String[] split = result.split("\\|");
         double similarity = Double.parseDouble(split[2]);
         String colleKey = split[1];
+
+        if (DataConfig.DEBUG_FLAG){
+            String debugPath = task.getCompareStudentDebugPath() + "/" + result;
+            List<String> picsFromBucket = identifyContainerManager.getPicsFromBucket(faceColle);
+            videoMediaService.readPicsFromRedis(task, picsFromBucket, debugPath);
+        }
+
         if (similarity < DataConfig.STUDENT_SIMILARITY){
 //            不达到阈值
             return null;

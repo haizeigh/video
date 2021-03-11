@@ -76,7 +76,12 @@ public class DataConfig {
     public static String STUDENT_ID = "student_id";
 
     //   redis中保存图片的字段field
-    public static String PIC = "pic";
+//    public static String PIC = "pic";
+    public static String PIC;
+    @Value("${pic}")
+    public void setPIC(String pic) {
+        DataConfig.PIC = pic;
+    }
 
 
 
@@ -85,7 +90,11 @@ public class DataConfig {
 //    redis的location字段 保存坐标
     public static String LOCATION = "location";
 
-
+    public static boolean DEBUG_FLAG;
+    @Value("${debug.flag}")
+    public void setDEBUG_FLAG(boolean debugFlag) {
+        DataConfig.DEBUG_FLAG = debugFlag;
+    }
 
 
     public static void main(String[] args) {

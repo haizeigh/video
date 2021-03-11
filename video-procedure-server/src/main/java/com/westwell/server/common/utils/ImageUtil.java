@@ -1,11 +1,12 @@
 package com.westwell.server.common.utils;
 
 
-
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 public class ImageUtil {
 
     public static void drawRect ( int x, int y, int width, int height, String infile, String outfile) throws IOException  {
@@ -19,6 +20,7 @@ public class ImageUtil {
         FileOutputStream out = new FileOutputStream(outfile);//输出图片的地址
         ImageIO.write(image, "jpeg", out);
     }
+
 
      public static void main(String[] args) throws IOException {
 //    InputStream in = new FileInputStream("d:\\test.jpg");//图片路径

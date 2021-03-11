@@ -141,6 +141,16 @@ public class VideoMediaServiceImpl implements VideoMediaService {
     }
 
     @Override
+    public void readPicFromRedis(String picKey, String path) throws Exception {
+        String pic = redisUtils.getHash(picKey, DataConfig.PIC).toString();
+        try {
+            ImgTransitionUtil.base64ToFile(pic, path + "/" + picKey + ".jpeg");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
     public boolean clearListInRedis(List<String> picKeyList) {
 
         picKeyList.stream().forEach(key -> redisUtils.delete(key));
